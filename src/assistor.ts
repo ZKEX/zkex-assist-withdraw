@@ -8,6 +8,7 @@ import {
 } from './conf'
 import { insertProcessedLogs, selectMaxProcessedLogId } from './db/process'
 import { logger } from './log'
+import { metricStartupProcessCount, updateMetric } from './monitor/registry'
 import { OrderedRequestStore, populateTransaction } from './parallel'
 import {
   ChainInfo,
@@ -34,6 +35,11 @@ export class AssistWithdraw {
     const eventProfile = getEventProfile()
     for (let k in eventProfile.chains) {
       const chainId = Number(k)
+
+      updateMetric(() => {
+        metricStartupProcessCount.labels(chainId.toString()).inc(0)
+      })
+
       const eventChain = eventProfile.chains[chainId][0]
       const chainProfile = chains.find((v) => Number(v.chainId) === chainId)
 
@@ -121,9 +127,6 @@ export class AssistWithdraw {
       const groupedRequests = groupingRequestParams(mergedRequests)
 
       for (let chainId in groupedRequests) {
-        if (Number(chainId) !== 80001) {
-          continue
-        }
         const txs = groupedRequests[chainId].map((v) => {
           logger.debug(
             `encode withdraw data: ${v.recepient} ${v.tokenId} ${v.amount}`
@@ -135,6 +138,11 @@ export class AssistWithdraw {
         })
 
         logger.debug(`Send txs: ${JSON.stringify(txs)}`)
+
+        updateMetric(() => {
+          metricStartupProcessCount.labels(chainId.toString()).inc(txs.length)
+        })
+
         this.signers[chainId].sendTransactions(txs)
       }
 

@@ -28,3 +28,22 @@ export async function selectMaxProcessedLogId() {
     FROM processed_logs;
   `)
 }
+
+export async function selectCountEachChain() {
+  return await pool.query(`
+    SELECT
+      chain_id AS "chainId",
+      COUNT(*) AS "count"
+    FROM processed_logs
+    GROUP BY chain_id;
+  `)
+}
+
+export async function selectProcessedLogIdEachChain() {
+  return await pool.query(`
+    SELECT
+      chain_id AS "chainId", MAX(log_id) AS "maxLogId"
+    FROM processed_logs
+    GROUP BY chain_id;
+  `)
+}

@@ -128,3 +128,17 @@ export let blockConfirmations: GetBlockConfirmationsResult
 export async function initBlockConfirmations() {
   blockConfirmations = await fetchBlockConfirmations()
 }
+
+export async function fetchCountLogs(
+  topic: string,
+  chainId: ChainId,
+  contractAddress: Address,
+  logId: number
+): Promise<number> {
+  return jsonrpc('watcher_countLogs', [
+    topic,
+    chainId,
+    contractAddress,
+    logId,
+  ]).then((r) => r.result)
+}

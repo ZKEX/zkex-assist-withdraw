@@ -16,7 +16,7 @@ export const SUBMITTER_GAS_LIMIT = '100000'
 export const MAXIMUM_PACK_TX_LIMIT = Number(process.env.MAXIMUM_PACK_TX_LIMIT)
 
 // ---------------- server port ----------------
-export const PORT = process.env.PORT
+export const PORT = Number(process.env.PORT)
 
 export const DATABASE_CONNECTION = process.env.DATABASE_CONNECTION!
 
