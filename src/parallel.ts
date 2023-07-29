@@ -168,12 +168,6 @@ export class OrderedRequestStore implements IOrderedRequestStore {
     }
     sql.push(`ORDER BY id DESC LIMIT 1;`)
     const latestPackedTx = await pool.query(sql.join(' '))
-    console.log(
-      '🚀 ~ getLatestPackedTransaction:',
-      chainId,
-      nonce,
-      JSON.stringify(latestPackedTx.rows)
-    )
     if (latestPackedTx.rows.length === 0) {
       return null
     }
