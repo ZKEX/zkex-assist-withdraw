@@ -1,13 +1,13 @@
-const { Pool } = require('pg');
+const { Pool } = require('pg')
 const dotenv = require('dotenv')
 
-dotenv.config({ path: `.env.${process.env.APP_ENV}` })
+dotenv.config({ path: `.env.${process.env.APP_ENV}`, override: true })
 dotenv.config({ path: `.env.${process.env.APP_ENV}.local`, override: true })
 
 // Create a connection pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_CONNECTION
-});
+  connectionString: process.env.DATABASE_CONNECTION,
+})
 
 // SQL queries for database and table creation
 const createRequestsTableQuery = `
@@ -20,7 +20,7 @@ const createRequestsTableQuery = `
     log_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
-`;
+`
 const createPackedTransactionsTableQuery = `
   CREATE TABLE IF NOT EXISTS packed_transactions
   (
@@ -35,7 +35,7 @@ const createPackedTransactionsTableQuery = `
     confirmation INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
-`;
+`
 const createProcessedLogsTableQuery = `
   CREATE TABLE IF NOT EXISTS processed_logs
   (
@@ -46,27 +46,27 @@ const createProcessedLogsTableQuery = `
     amount NUMERIC NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
-`;
+`
 
 // Function to initialize the database and tables
 async function initializeDatabase() {
   // Connect to the default PostgreSQL database (e.g., 'postgres')
-  const client = await pool.connect();
+  const client = await pool.connect()
 
   try {
     // Create the tables
-    await client.query(createRequestsTableQuery);
-    await client.query(createPackedTransactionsTableQuery);
-    await client.query(createProcessedLogsTableQuery);
+    await client.query(createRequestsTableQuery)
+    await client.query(createPackedTransactionsTableQuery)
+    await client.query(createProcessedLogsTableQuery)
 
-    console.log('Database and tables created successfully');
+    console.log('Database and tables created successfully')
   } catch (error) {
-    console.error('Error initializing database:', error);
+    console.error('Error initializing database:', error)
   } finally {
     // Release the client connection
-    client.release();
+    client.release()
   }
 }
 
 // Call the initializeDatabase function to start the initialization process
-initializeDatabase();
+initializeDatabase()
