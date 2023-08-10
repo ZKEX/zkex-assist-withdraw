@@ -58,6 +58,8 @@ export const multicallContract: Record<ChainId, Address> = {
   5: '0xBb19f393E1EAa08408190e6D14C6c89fC27834E7',
   // BSC Testnet
   97: '0x5d9506df44a6A1a31ccAc7B1d7BfF7C6060624c8',
+  // zkSync Era Testnet
+  280: '0xDab089D0b82d6dad2924c0eD7f6742a078C36529',
   // Optimism Testnet
   420: '0x87007Ba1823FFcafF89b72142fF3165F23ea9B8F',
   // Mantle
