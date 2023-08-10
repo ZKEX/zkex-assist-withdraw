@@ -36,12 +36,16 @@ export const multicallContract: Record<ChainId, Address> = {
   // ======= Mainnet =======
   // Ethereum
   1: '0x139abB67A33F6DDCF00fbaB5E321184F4e5C22E1',
+  // Optimism
+  10: '0x028781cEed4A2264466ef5AB73c91603087fa131',
   // BSC
   56: '0x7c56DA81caACEcEEfF624BAA93B314e793bC88b3',
   // Polygon
   137: '0x09CB6C5A235939258e3F6Ae2989cf6f26EeE1c72',
   // zkSync Era
   324: '0x20126263a37d5039086D92a4703a17610C541450',
+  // Base
+  8453: '0xDd5097FC3f68958649cE70F42B7c1CF0067a3545',
   // Arbitrum
   42161: '0x028781cEed4A2264466ef5AB73c91603087fa131',
   // Avalanche
@@ -56,12 +60,20 @@ export const multicallContract: Record<ChainId, Address> = {
   97: '0x5d9506df44a6A1a31ccAc7B1d7BfF7C6060624c8',
   // Optimism Testnet
   420: '0x87007Ba1823FFcafF89b72142fF3165F23ea9B8F',
+  // Mantle
+  5001: '0x733aDFA13EDfA308C728423Cc8AF8F4E1cCF02a7',
   // Avalanche Testnet
   43113: '0xC054C98FC3BD2F218c4EE882326f032BCa7a4ab7',
   // Linea Testnet
   59140: '0x22BA8bb2b1Ea8C122f584bcbADa0cFA2d0886b49',
   // Polygon Testnet
   80001: '0x5dDc357917979d5dEce59cc68A8444Ccd6F4B7cb',
+  // Base
+  84531: '0x7ab1cc9420B363FB2304576FFecE1Dbe304B6ad4',
+  // Taiko
+  167005: '0xa5327B1fBBBd4F3b8d06070a86090269ec35445e',
   // Arbitrum Testnet
   421613: '0x5f25856e4f191cea5f1D8ca42Ba9C163CaBeb0a9',
+  // Manta
+  3441005: '0x7ab1cc9420B363FB2304576FFecE1Dbe304B6ad4',
 }
