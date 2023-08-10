@@ -28,7 +28,7 @@ export function populateTransaction(
     to: string
     data: string
     value?: BigNumber
-    gasLimit: BigNumber | null
+    gasLimit: BigNumber | null | any
     maxFeePerGas?: string
     maxPriorityFeePerGas?: string
     gasPrice?: string
