@@ -4,7 +4,7 @@ import {
   PackedTransaction,
   Request,
 } from 'parallel-signer'
-import { SUBMITTER_FEE_POLICY, SUBMITTER_GAS_LIMIT } from './conf'
+import { SUBMITTER_FEE_POLICY } from './conf'
 import { pool } from './db'
 import { fetchFeeData } from './scanner'
 import { Address, ChainId, Wei } from './types'
@@ -28,7 +28,7 @@ export function populateTransaction(
     to: string
     data: string
     value?: BigNumber
-    gasLimit: BigNumber
+    gasLimit: BigNumber | null
     maxFeePerGas?: string
     maxPriorityFeePerGas?: string
     gasPrice?: string
@@ -86,7 +86,7 @@ export function populateTransaction(
       to,
       data: calldata,
       value: BigNumber.from('0'),
-      gasLimit: BigNumber.from(SUBMITTER_GAS_LIMIT).mul(requests.length),
+      gasLimit: null,
       ...fee,
     }
   }
