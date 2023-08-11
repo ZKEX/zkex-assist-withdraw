@@ -1,4 +1,4 @@
-import { BigNumber } from 'ethers'
+import { BigNumber, BigNumberish } from 'ethers'
 import {
   IOrderedRequestStore,
   PackedTransaction,
@@ -7,7 +7,7 @@ import {
 import { SUBMITTER_FEE_POLICY } from './conf'
 import { pool } from './db'
 import { fetchFeeData } from './scanner'
-import { Address, ChainId, Wei } from './types'
+import { Address, ChainId } from './types'
 import { MULTICALL_INTERFACE } from './utils'
 import { decodeWithdrawData } from './utils/withdrawal'
 
@@ -29,9 +29,9 @@ export function populateTransaction(
     data: string
     value?: BigNumber
     gasLimit: BigNumber | null | any
-    maxFeePerGas?: string
-    maxPriorityFeePerGas?: string
-    gasPrice?: string
+    maxFeePerGas?: BigNumberish | any
+    maxPriorityFeePerGas?: BigNumberish | any
+    gasPrice?: BigNumberish | any
   }> {
     let to = ''
     let calldata = ''
@@ -66,20 +66,23 @@ export function populateTransaction(
     // Retrieve the latest fee configuration through the event watcher service.
     const feeData = await fetchFeeData(chainId)
     const fee: {
-      maxFeePerGas?: Wei
-      maxPriorityFeePerGas?: Wei
-      gasPrice?: Wei
+      maxFeePerGas?: BigNumberish
+      maxPriorityFeePerGas?: BigNumberish
+      gasPrice?: BigNumberish
     } = {}
     // Prioritize using the EIP-1559 fee settings.
     if (
       feeData[SUBMITTER_FEE_POLICY].maxFeePerGas &&
       BigNumber.from(feeData[SUBMITTER_FEE_POLICY].maxFeePerGas).gt('0')
     ) {
-      fee.maxFeePerGas = feeData[SUBMITTER_FEE_POLICY].maxFeePerGas
-      fee.maxPriorityFeePerGas =
+      fee.maxFeePerGas = BigNumber.from(
+        feeData[SUBMITTER_FEE_POLICY].maxFeePerGas
+      )
+      fee.maxPriorityFeePerGas = BigNumber.from(
         feeData[SUBMITTER_FEE_POLICY].maxPriorityFeePerGas
+      )
     } else {
-      fee.gasPrice = feeData[SUBMITTER_FEE_POLICY].gasPrice
+      fee.gasPrice = BigNumber.from(feeData[SUBMITTER_FEE_POLICY].gasPrice)
     }
 
     return {
@@ -87,6 +90,7 @@ export function populateTransaction(
       data: calldata,
       value: BigNumber.from('0'),
       gasLimit: null,
+      // gasLimit: BigNumber.from(SUBMITTER_GAS_LIMIT).mul(requests.length),
       ...fee,
     }
   }
