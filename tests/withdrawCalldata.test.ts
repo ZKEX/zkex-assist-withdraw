@@ -1,4 +1,4 @@
-import { parseEther } from 'ethers/lib/utils'
+import { parseEther } from 'ethers'
 import { decodeWithdrawData, encodeWithdrawData } from '../src/utils/withdrawal'
 
 describe('handle withdraw calldata', () => {
@@ -20,7 +20,7 @@ describe('handle withdraw calldata', () => {
     expect(data.recepient.toLowerCase()).toBe(
       '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     )
-    expect(data.tokenId).toBe(1)
-    expect(data.amount.toString()).toBe(parseEther('1').toString())
+    expect(data.tokenId).toBe(1n)
+    expect(data.amount).toBe(parseEther('1'))
   })
 })

@@ -11,13 +11,7 @@ export async function insertProcessedLogs(logs: WithdrawalRequestParams[]) {
         VALUES ($1, $2, $3, $4, $5)
         ON CONFLICT (log_id) DO NOTHING
       `,
-      [
-        log.logId,
-        log.chainId,
-        log.recepient,
-        log.tokenId,
-        log.amount.toBigInt(),
-      ]
+      [log.logId, log.chainId, log.recepient, log.tokenId, log.amount]
     )
   }
 }

@@ -1,4 +1,4 @@
-import { providers } from 'ethers'
+import { JsonRpcProvider } from 'ethers'
 import { ParallelSigner } from 'parallel-signer'
 import {
   MAXIMUM_PACK_TX_LIMIT,
@@ -59,7 +59,7 @@ export class AssistWithdraw {
 
       this.signers[chainId] = new ParallelSigner(
         SUBMITTER_PRIVATE_KEY,
-        new providers.JsonRpcProvider(web3Url, {
+        new JsonRpcProvider(web3Url, {
           name: '',
           chainId: chainId,
         }),
@@ -137,7 +137,7 @@ export class AssistWithdraw {
           }
         })
 
-        logger.debug(`Send txs: ${JSON.stringify(txs)}`)
+        // logger.debug(`Send txs: ${JSON.stringify(txs)}`)
 
         updateMetric(() => {
           metricStartupProcessCount.labels(chainId.toString()).inc(txs.length)

@@ -11,7 +11,6 @@ export const SUBMITTER_PRIVATE_KEY = process.env.SUBMITTER_PRIVATE_KEY!
 // The fee strategy is a service provided by the event watcher, with three options available: "standard", "fast", and "rapid".
 export const SUBMITTER_FEE_POLICY: 'standard' | 'fast' | 'rapid' = process.env
   .SUBMITTER_FEE_POLICY! as 'standard' | 'fast' | 'rapid'
-export const SUBMITTER_GAS_LIMIT = '100000'
 // This number is used to control the maximum number of transactions to be merged.
 export const MAXIMUM_PACK_TX_LIMIT = Number(process.env.MAXIMUM_PACK_TX_LIMIT)
 
@@ -30,6 +29,10 @@ export const EVENT_NAME = 'WithdrawalPending'
 
 // ---------------- logger ----------------
 export const TRANSPORT_CONSOLE = true
+
+export const gasLimitForChains: Record<ChainId, bigint> = {
+  43113: 100000n,
+}
 
 // Multicall contract addresses
 export const multicallContract: Record<ChainId, Address> = {

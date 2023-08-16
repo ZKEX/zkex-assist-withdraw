@@ -1,5 +1,4 @@
-import { BigNumber } from 'ethers'
-import { arrayify, hexDataSlice } from 'ethers/lib/utils'
+import { dataSlice, getBytes } from 'ethers'
 import { ZKLINK_INTERFACE } from '.'
 import { EVENT_NAME } from '../conf'
 import { Address, ChainId, HexString } from '../types'
@@ -8,15 +7,15 @@ export interface WithdrawalEventParams {
   chainId: ChainId
   recepient: Address
   tokenId: number
-  amount: BigNumber
+  amount: bigint
 }
 
 export interface WithdrawalRequestParams extends WithdrawalEventParams {
   logId: number // log id, event watcher primary key
 }
 
-export const withdrawalEventFragment = ZKLINK_INTERFACE.getEvent(EVENT_NAME)
-export const withdrawalEventTopic = ZKLINK_INTERFACE.getEventTopic(EVENT_NAME)
+export const withdrawalEventFragment = ZKLINK_INTERFACE.getEvent(EVENT_NAME)!
+export const withdrawalEventTopic = withdrawalEventFragment.topicHash
 
 export function decodeWithdrawalLog(data: HexString, topics: HexString[]) {
   const decodedData = ZKLINK_INTERFACE.decodeEventLog(
@@ -30,10 +29,10 @@ export function decodeWithdrawalLog(data: HexString, topics: HexString[]) {
 // compress the bytes32 address to bytes20
 // 0x000000000000000000000000086cacda48e8a77680ba1e79177d1655f7130c95 -> 0x086cacda48e8a77680ba1e79177d1655f7130c95
 export function compressAddress(address: HexString) {
-  if (arrayify(address).length === 32) {
-    return hexDataSlice(address, 12)
+  if (getBytes(address).length === 32) {
+    return dataSlice(address, 12)
   }
-  if (arrayify(address).length === 20) {
+  if (getBytes(address).length === 20) {
     return address
   }
   return address
@@ -50,7 +49,7 @@ export function mergeEventRequestParams(
   for (const item of requestParams) {
     const key = `${item.chainId}-${item.recepient}-${item.tokenId}`
     if (resultMap.hasOwnProperty(key)) {
-      resultMap[key].amount = resultMap[key].amount.add(item.amount)
+      resultMap[key].amount = resultMap[key].amount + item.amount
       resultMap[key].logId = Math.max(resultMap[key].logId, item.logId)
     } else {
       resultMap[key] = { ...item }
@@ -58,7 +57,7 @@ export function mergeEventRequestParams(
   }
 
   // the merged event amount should greater than 0
-  return Object.values(resultMap).filter((v) => v.amount.gt('0'))
+  return Object.values(resultMap).filter((v) => v.amount > 0)
 }
 
 // Group the requestParams data by chainId and then use ParallelSigner to send the data to each chain.
@@ -78,11 +77,11 @@ export function groupingRequestParams<
 
 export const fragmentWithdrawPendingBalance = ZKLINK_INTERFACE.getFunction(
   'withdrawPendingBalance'
-)
+)!
 export function encodeWithdrawData(
   recepient: Address,
   tokenId: number,
-  amount: BigNumber
+  amount: bigint
 ) {
   return ZKLINK_INTERFACE.encodeFunctionData(fragmentWithdrawPendingBalance, [
     recepient,
@@ -92,8 +91,8 @@ export function encodeWithdrawData(
 }
 export function decodeWithdrawData(calldata: string): {
   recepient: Address
-  tokenId: number
-  amount: BigNumber
+  tokenId: bigint
+  amount: bigint
 } {
   const data = ZKLINK_INTERFACE.decodeFunctionData(
     fragmentWithdrawPendingBalance,

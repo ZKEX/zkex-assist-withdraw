@@ -1,10 +1,9 @@
-import { BigNumber, BigNumberish } from 'ethers'
 import {
   IOrderedRequestStore,
   PackedTransaction,
   Request,
 } from 'parallel-signer'
-import { SUBMITTER_FEE_POLICY } from './conf'
+import { SUBMITTER_FEE_POLICY, gasLimitForChains } from './conf'
 import { pool } from './db'
 import { fetchFeeData } from './scanner'
 import { Address, ChainId } from './types'
@@ -27,19 +26,19 @@ export function populateTransaction(
   return async function (requests: Request[]): Promise<{
     to: string
     data: string
-    value?: BigNumber
-    gasLimit: BigNumber | null | any
-    maxFeePerGas?: BigNumberish | any
-    maxPriorityFeePerGas?: BigNumberish | any
-    gasPrice?: BigNumberish | any
+    value?: bigint
+    gasLimit: bigint | null | any
+    maxFeePerGas?: bigint | any
+    maxPriorityFeePerGas?: bigint | any
+    gasPrice?: bigint | any
   }> {
     let to = ''
     let calldata = ''
     if (requests.length > 1) {
       to = multipleContract // multiple sender contract address
       const recepients: Address[] = []
-      const tokenIds: number[] = []
-      const amounts: BigNumber[] = []
+      const tokenIds: bigint[] = []
+      const amounts: bigint[] = []
 
       requests.forEach((r) => {
         const d = decodeWithdrawData(r.functionData)
@@ -49,7 +48,7 @@ export function populateTransaction(
       })
       const fragment = MULTICALL_INTERFACE.getFunction(
         'batchWithdrawPendingBalance'
-      )
+      )!
       calldata = MULTICALL_INTERFACE.encodeFunctionData(fragment, [
         recepients,
         tokenIds,
@@ -66,31 +65,27 @@ export function populateTransaction(
     // Retrieve the latest fee configuration through the event watcher service.
     const feeData = await fetchFeeData(chainId)
     const fee: {
-      maxFeePerGas?: BigNumberish
-      maxPriorityFeePerGas?: BigNumberish
-      gasPrice?: BigNumberish
+      maxFeePerGas?: bigint
+      maxPriorityFeePerGas?: bigint
+      gasPrice?: bigint
     } = {}
-    // Prioritize using the EIP-1559 fee settings.
-    if (
-      feeData[SUBMITTER_FEE_POLICY].maxFeePerGas &&
-      BigNumber.from(feeData[SUBMITTER_FEE_POLICY].maxFeePerGas).gt('0')
-    ) {
-      fee.maxFeePerGas = BigNumber.from(
-        feeData[SUBMITTER_FEE_POLICY].maxFeePerGas
-      )
-      fee.maxPriorityFeePerGas = BigNumber.from(
-        feeData[SUBMITTER_FEE_POLICY].maxPriorityFeePerGas
-      )
-    } else {
-      fee.gasPrice = BigNumber.from(feeData[SUBMITTER_FEE_POLICY].gasPrice)
+
+    const { maxFeePerGas, maxPriorityFeePerGas, gasPrice } =
+      feeData[SUBMITTER_FEE_POLICY]
+    if (maxFeePerGas && maxFeePerGas != 0n) {
+      fee.maxFeePerGas = BigInt(maxFeePerGas!)
+      fee.maxPriorityFeePerGas = BigInt(maxPriorityFeePerGas!)
+    } else if (gasPrice && gasPrice != 0n) {
+      fee.gasPrice = BigInt(gasPrice)
     }
+
+    const gasLimit = gasLimitForChains[chainId]
 
     return {
       to,
       data: calldata,
-      value: BigNumber.from('0'),
-      gasLimit: null,
-      // gasLimit: BigNumber.from(SUBMITTER_GAS_LIMIT).mul(requests.length),
+      value: 0n,
+      gasLimit: gasLimit ? gasLimit * BigInt(requests.length) : null,
       ...fee,
     }
   }

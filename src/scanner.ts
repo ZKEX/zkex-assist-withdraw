@@ -96,21 +96,21 @@ export async function fetchEventLogs(
 
 export interface GetFeeDataResult {
   chainId: ChainId
-  lastBaseFeePerGas: Wei
+  lastBaseFeePerGas: bigint
   standard: {
-    maxFeePerGas?: Wei
-    maxPriorityFeePerGas?: Wei
-    gasPrice?: Wei
+    maxFeePerGas?: bigint
+    maxPriorityFeePerGas?: bigint
+    gasPrice?: bigint
   }
   fast: {
-    maxFeePerGas?: Wei
-    maxPriorityFeePerGas?: Wei
-    gasPrice?: Wei
+    maxFeePerGas?: bigint
+    maxPriorityFeePerGas?: bigint
+    gasPrice?: bigint
   }
   rapid: {
-    maxFeePerGas?: Wei
-    maxPriorityFeePerGas?: Wei
-    gasPrice?: Wei
+    maxFeePerGas?: bigint
+    maxPriorityFeePerGas?: bigint
+    gasPrice?: bigint
   }
 }
 export async function fetchFeeData(
