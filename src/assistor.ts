@@ -1,19 +1,19 @@
 import { JsonRpcProvider } from 'ethers'
 import { ParallelSigner } from 'parallel-signer'
 import {
+  CHAIN_IDS,
   MAXIMUM_PACK_TX_LIMIT,
   POLLING_LOGS_INTERVAL,
   SUBMITTER_PRIVATE_KEY,
-  multicallContract,
 } from './conf'
 import { insertProcessedLogs, selectMaxProcessedLogId } from './db/process'
 import { logger } from './log'
 import { metricStartupProcessCount, updateMetric } from './monitor/registry'
 import { OrderedRequestStore, populateTransaction } from './parallel'
 import {
-  ChainInfo,
   EventLog,
   blockConfirmations,
+  fetchChains,
   fetchEventLogs,
   getEventProfile,
 } from './scanner'
@@ -26,14 +26,19 @@ import {
   groupingRequestParams,
   mergeEventRequestParams,
 } from './utils/withdrawal'
+import { ChainId } from './types'
+import { getMulticallContracts } from './utils/multicall'
 
 export class AssistWithdraw {
   private signers: Record<number, ParallelSigner> = {}
   private offsetId: number = 0 // start log id of fetch new event logs
+  private requestStore = new OrderedRequestStore()
 
-  async initSigners(chains: ChainInfo[]) {
+  async initSigners(chainIds: ChainId[]) {
+    const chains = await fetchChains()
     const eventProfile = getEventProfile()
-    for (let k in eventProfile.chains) {
+    const multicallContracts = getMulticallContracts()
+    for (let k of chainIds) {
       const chainId = Number(k)
 
       updateMetric(() => {
@@ -49,7 +54,7 @@ export class AssistWithdraw {
       const { web3Url } = chainProfile
       // zkLink's main contract address for v.chainId
       const mainContract = eventChain.contractAddress
-      const multicallContractAddress = multicallContract[chainId]
+      const multicallContractAddress = multicallContracts[chainId]
 
       if (!multicallContractAddress) {
         throw new Error(
@@ -63,7 +68,7 @@ export class AssistWithdraw {
           name: '',
           chainId: chainId,
         }),
-        new OrderedRequestStore(),
+        this.requestStore,
         populateTransaction(chainId, mainContract, multicallContractAddress),
         {
           requestCountLimit: MAXIMUM_PACK_TX_LIMIT,
@@ -143,7 +148,17 @@ export class AssistWithdraw {
           metricStartupProcessCount.labels(chainId.toString()).inc(txs.length)
         })
 
-        this.signers[chainId].sendTransactions(txs)
+        // If the layerOneChainId is offline or disabled, only save the requests to db
+        if (CHAIN_IDS.includes(Number(chainId)) === false) {
+          this.requestStore.setRequests(
+            txs.map((v) => ({
+              ...v,
+              chainId: Number(chainId),
+            }))
+          )
+        } else {
+          this.signers[chainId].sendTransactions(txs)
+        }
       }
 
       await insertProcessedLogs(mergedRequests)

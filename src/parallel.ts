@@ -21,7 +21,7 @@ import { decodeWithdrawData } from './utils/withdrawal'
 export function populateTransaction(
   chainId: ChainId,
   mainContract: Address,
-  multipleContract: Address
+  multicallContract: Address
 ) {
   return async function (requests: Request[]): Promise<{
     to: string
@@ -35,7 +35,7 @@ export function populateTransaction(
     let to = ''
     let calldata = ''
     if (requests.length > 1) {
-      to = multipleContract // multiple sender contract address
+      to = multicallContract // multiple sender contract address
       const recepients: Address[] = []
       const tokenIds: bigint[] = []
       const amounts: bigint[] = []
