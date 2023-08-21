@@ -31,7 +31,7 @@ export const EVENT_NAME = 'WithdrawalPending'
 export const TRANSPORT_CONSOLE = true
 
 export const gasLimitForChains: Record<ChainId, bigint> = {
-  43113: 100000n,
+  // 43113: 100000n,
 }
 
 // Multicall contract addresses
