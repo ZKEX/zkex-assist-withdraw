@@ -36,17 +36,6 @@ const createPackedTransactionsTableQuery = `
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 `
-const createProcessedLogsTableQuery = `
-  CREATE TABLE IF NOT EXISTS processed_logs
-  (
-    log_id INTEGER PRIMARY KEY,
-    chain_id INTEGER NOT NULL,
-    recepient VARCHAR(66) NOT NULL,
-    token_id SMALLINT NOT NULL,
-    amount NUMERIC NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );
-`
 
 // Function to initialize the database and tables
 async function initializeDatabase() {

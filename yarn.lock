@@ -2465,10 +2465,10 @@ packet-reader@1.0.0:
   resolved "https://registry.npmjs.org/packet-reader/-/packet-reader-1.0.0.tgz#9238e5480dedabacfe1fe3f2771063f164157d74"
   integrity sha512-HAKu/fG3HpHFO0AA8WE8q2g+gBJaZ9MG7fcKk+IJPLTGAD6Psw4443l+9DGRbOIh3/aXr7Phy0TjilYivJo5XQ==
 
-parallel-signer@^2.0.11:
-  version "2.0.11"
-  resolved "https://registry.npmjs.org/parallel-signer/-/parallel-signer-2.0.11.tgz#c410de513f6baced6e535b6346e1eeb5b1a0f8de"
-  integrity sha512-UH41A33HCvxrWF2Mdvgmz0xb8q98qVlDVcZ8lxQLKmIVAfMUcmjNFmWAEX2mbxMEpc8E0vqWHUbCWnhqf8GuVA==
+parallel-signer@^2.0.15:
+  version "2.0.15"
+  resolved "https://registry.npmjs.org/parallel-signer/-/parallel-signer-2.0.15.tgz#93a5f76a81832d7efa28405f411124887fb8e76a"
+  integrity sha512-lVELItd7aULrEbV4Wc6CCd6kd/nACBQxihmKfZFPKohdPCmsmFnFR++YePMscPOuOcNoK8WotFLXbpcgPDZFGw==
   dependencies:
     ethers "^6.7.0"
 

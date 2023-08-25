@@ -1,5 +1,6 @@
 import dotenv from 'dotenv'
 import { Address, ChainId } from '../types'
+import { logger } from '../log'
 
 dotenv.config({ path: `.env.${process.env.APP_ENV}`, override: true })
 dotenv.config({ path: `.env.${process.env.APP_ENV}.local`, override: true })
@@ -36,6 +37,4 @@ export const EVENT_NAME = 'WithdrawalPending'
 // ---------------- logger ----------------
 export const TRANSPORT_CONSOLE = true
 
-export const gasLimitForChains: Record<ChainId, bigint> = {
-  // 43113: 100000n,
-}
+export const gasLimitForChains: Record<ChainId, bigint> = {}

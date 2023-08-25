@@ -1,15 +1,8 @@
+import { ChainId } from './types/index'
 import fetch from 'node-fetch'
 import './conf/index'
 import { EVENT_WATCHER_ENDPOINT, POLLING_LOGS_LIMIT } from './conf/index'
-import {
-  Address,
-  BlockNumber,
-  ChainId,
-  EventName,
-  HexString,
-  Topic,
-  Wei,
-} from './types'
+import { Address, BlockNumber, EventName, HexString, Topic, Wei } from './types'
 import { withdrawalEventTopic } from './utils/withdrawal'
 
 async function jsonrpc(method: string, params: any[] = [], id: number = 1) {
@@ -39,6 +32,14 @@ export async function fetchChains(): Promise<ChainInfo[]> {
   return jsonrpc('watcher_getChains').then((r) => r.result)
 }
 
+let chains: ChainInfo[] = []
+export async function initChains() {
+  chains = await fetchChains()
+}
+export function getChains() {
+  return chains
+}
+
 export interface EventProfile {
   name: EventName
   topic: string
@@ -60,6 +61,11 @@ export async function initEventProfile() {
 }
 export function getEventProfile() {
   return eventProfile
+}
+export function getMainContractByChainId(chainId: ChainId) {
+  const eventProfile = getEventProfile()
+  const eventChain = eventProfile.chains[chainId][0]
+  return eventChain.contractAddress
 }
 
 export interface EventLog {

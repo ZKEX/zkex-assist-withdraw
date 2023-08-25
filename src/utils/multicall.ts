@@ -33,10 +33,13 @@ export async function fetchMulticallContracts() {
 export function getMulticallContracts() {
   return multicallContracts
 }
+export function getMulticallContractByChainId(chainId: ChainId) {
+  return multicallContracts[chainId]
+}
 
 export const callMulticall = async (
   provider: JsonRpcProvider,
-  contractAddress: Address,
+  multicallContract: Address,
   abi: any[],
   functionName: string,
   callAddresses: Address[],
@@ -45,7 +48,7 @@ export const callMulticall = async (
   try {
     const iface = new Interface(abi)
     const fragment = iface.getFunction(functionName)!
-    const contract = new Contract(contractAddress, Multicall.abi, provider)
+    const contract = new Contract(multicallContract, Multicall.abi, provider)
     const tx = await contract.multiStaticCall(callAddresses, calls)
 
     const [blockNumber, returnDatas] = tx

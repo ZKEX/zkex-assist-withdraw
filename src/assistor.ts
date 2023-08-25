@@ -1,4 +1,4 @@
-import { JsonRpcProvider } from 'ethers'
+import { JsonRpcProvider, parseEther, zeroPadValue } from 'ethers'
 import { ParallelSigner } from 'parallel-signer'
 import {
   CHAIN_IDS,
@@ -6,7 +6,7 @@ import {
   POLLING_LOGS_INTERVAL,
   SUBMITTER_PRIVATE_KEY,
 } from './conf'
-import { insertProcessedLogs, selectMaxProcessedLogId } from './db/process'
+import { selectMaxProcessedLogId } from './db/process'
 import { logger } from './log'
 import { metricStartupProcessCount, updateMetric } from './monitor/registry'
 import { OrderedRequestStore, populateTransaction } from './parallel'
@@ -15,7 +15,9 @@ import {
   blockConfirmations,
   fetchChains,
   fetchEventLogs,
+  getChains,
   getEventProfile,
+  getMainContractByChainId,
 } from './scanner'
 import { sleep } from './utils/sleep'
 import {
@@ -26,8 +28,18 @@ import {
   groupingRequestParams,
   mergeEventRequestParams,
 } from './utils/withdrawal'
-import { ChainId } from './types'
-import { getMulticallContracts } from './utils/multicall'
+import { Address, ChainId } from './types'
+import {
+  callMulticall,
+  getMulticallContractByChainId,
+  getMulticallContracts,
+} from './utils/multicall'
+import { providerByChainId } from './utils/providers'
+import {
+  MAXIMUM_WITHDRAWAL_AMOUNT,
+  ZKLINK_ABI,
+  ZKLINK_INTERFACE,
+} from './utils'
 
 export class AssistWithdraw {
   private signers: Record<number, ParallelSigner> = {}
@@ -35,25 +47,36 @@ export class AssistWithdraw {
   private requestStore = new OrderedRequestStore()
 
   async initSigners(chainIds: ChainId[]) {
-    const chains = await fetchChains()
-    const eventProfile = getEventProfile()
+    logger.info(`Enabled chain id: ${chainIds}`)
+    const chains = getChains()
+    // TODO: mock data
+    // ------------------ >
     const multicallContracts = getMulticallContracts()
+    // --------------------
+    // const multicallContracts: Record<ChainId, Address> = {
+    //   80001: '0x57d128a3A7672CCf98Def4E443701Bc9a515b3d8',
+    //   43113: '0x1Da73Ce004339ec8dACb2Ca25623eDDd3CFE7b82',
+    //   97: '0x1db5D85963BdE5A4Ff570Db4B341ad9Bba812fa2',
+    //   5: '0x0df4860aFf443d714a5dFF6C9bF9f9aDd2927657',
+    // }
+    // ------------------ <
+
     for (let k of chainIds) {
       const chainId = Number(k)
 
-      updateMetric(() => {
-        metricStartupProcessCount.labels(chainId.toString()).inc(0)
-      })
-
-      const eventChain = eventProfile.chains[chainId][0]
       const chainProfile = chains.find((v) => Number(v.chainId) === chainId)
 
       if (!chainProfile) {
         throw new Error(`Can't find chain's profile. ${chainId}`)
       }
-      const { web3Url } = chainProfile
+
+      updateMetric(() => {
+        metricStartupProcessCount.labels(chainId.toString()).inc(0)
+      })
+
       // zkLink's main contract address for v.chainId
-      const mainContract = eventChain.contractAddress
+      const mainContract = getMainContractByChainId(chainId)
+
       const multicallContractAddress = multicallContracts[chainId]
 
       if (!multicallContractAddress) {
@@ -64,10 +87,7 @@ export class AssistWithdraw {
 
       this.signers[chainId] = new ParallelSigner(
         SUBMITTER_PRIVATE_KEY,
-        new JsonRpcProvider(web3Url, {
-          name: '',
-          chainId: chainId,
-        }),
+        providerByChainId(chainId),
         this.requestStore,
         populateTransaction(chainId, mainContract, multicallContractAddress),
         {
@@ -76,6 +96,10 @@ export class AssistWithdraw {
         }
       )
       this.signers[chainId].init()
+
+      logger.info(
+        `Initial parallel signer for ${chainId}, mainContract=${mainContract}`
+      )
     }
   }
 
@@ -102,6 +126,26 @@ export class AssistWithdraw {
     logs: EventLog[]
   ): Promise<WithdrawalRequestParams[]> {
     if (!logs?.length) return []
+
+    const eventProfile = getEventProfile()
+    /**
+     * Filter out some invalid events:
+     * - The main contract configuration for the current event's chain is not found.
+     * - The contract address of the current event differs from the configured main contract address.
+     */
+    logs = logs.filter((v) => {
+      const chainInfo = eventProfile.chains[v.chainId][0]
+      if (!chainInfo || !chainInfo?.contractAddress) {
+        return false
+      }
+      if (
+        v.contractAddress.toLowerCase() !==
+        chainInfo.contractAddress.toLowerCase()
+      ) {
+        return false
+      }
+      return true
+    })
 
     const withdrawParams: WithdrawalRequestParams[] = []
     for (let i in logs) {
@@ -132,9 +176,13 @@ export class AssistWithdraw {
       const groupedRequests = groupingRequestParams(mergedRequests)
 
       for (let chainId in groupedRequests) {
-        const txs = groupedRequests[chainId].map((v) => {
+        const rows = await this.filterAvailableBalanceRequests(
+          Number(chainId),
+          groupedRequests[chainId]
+        )
+        const txs = rows.map((v) => {
           logger.debug(
-            `encode withdraw data: ${v.recepient} ${v.tokenId} ${v.amount}`
+            `encode withdraw for chain ${chainId}: ${v.recepient} ${v.tokenId} ${v.amount}`
           )
           return {
             functionData: encodeWithdrawData(v.recepient, v.tokenId, v.amount),
@@ -161,7 +209,7 @@ export class AssistWithdraw {
         }
       }
 
-      await insertProcessedLogs(mergedRequests)
+      // await insertProcessedLogs(mergedRequests)
     }
 
     // Why is the maximum value taken from the IDs in sourceLogs?
@@ -203,14 +251,64 @@ export class AssistWithdraw {
     }
   }
 
+  async filterAvailableBalanceRequests(
+    chainId: ChainId,
+    rows: WithdrawalRequestParams[]
+  ): Promise<WithdrawalRequestParams[]> {
+    let resultRows = [...rows]
+
+    // Check if the user truly has pending balance in main contract
+    try {
+      const provider = providerByChainId(chainId)
+      const mainContract = getMainContractByChainId(chainId)
+      const multicallContract = getMulticallContractByChainId(chainId)
+      const callAddresses = []
+      const calls = []
+      for (let i in resultRows) {
+        const row = resultRows[i]
+        const calldata = ZKLINK_INTERFACE.encodeFunctionData(
+          'getPendingBalance',
+          [zeroPadValue(row.recepient, 32), row.tokenId]
+        )
+        callAddresses.push(mainContract)
+        calls.push(calldata)
+      }
+
+      const results: bigint[] = await callMulticall(
+        provider,
+        multicallContract,
+        ZKLINK_ABI,
+        'getPendingBalance',
+        callAddresses,
+        calls
+      )
+
+      results.forEach((v, i) => {
+        resultRows[i].amount = v
+      })
+    } catch (e: any) {
+      logger.error(`fetch available balance fail. ${chainId}`)
+      logger.error(e?.message)
+    }
+
+    // Filter the zero amount row
+    resultRows = resultRows.filter((v) => v.amount > 0)
+
+    // By the time it executes to this point, resultRows represents genuine withdrawal requests.
+    resultRows = resultRows.map((v) => ({
+      ...v,
+      amount: MAXIMUM_WITHDRAWAL_AMOUNT,
+    }))
+
+    return resultRows
+  }
+
   async watchNewEventLogs() {
     await this.restoreOffsetId()
-
     while (true) {
       const rows = await fetchEventLogs(this.offsetId)
       if (rows.length) {
         const withdrawParams = await this.parseLogs(rows)
-
         await this.submitTransactions(withdrawParams, rows)
       }
       await sleep(POLLING_LOGS_INTERVAL)

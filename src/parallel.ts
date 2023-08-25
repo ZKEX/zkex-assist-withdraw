@@ -9,6 +9,7 @@ import { fetchFeeData } from './scanner'
 import { Address, ChainId } from './types'
 import { MULTICALL_INTERFACE } from './utils'
 import { decodeWithdrawData } from './utils/withdrawal'
+import { providerByChainId } from './utils/providers'
 
 /**
  * Assembling TransactionRequest data for sending the transaction.
@@ -64,6 +65,7 @@ export function populateTransaction(
 
     // Retrieve the latest fee configuration through the event watcher service.
     const feeData = await fetchFeeData(chainId)
+
     const fee: {
       maxFeePerGas?: bigint
       maxPriorityFeePerGas?: bigint
@@ -79,15 +81,24 @@ export function populateTransaction(
       fee.gasPrice = BigInt(gasPrice)
     }
 
-    const gasLimit = gasLimitForChains[chainId]
+    let gasLimit = gasLimitForChains[chainId]
 
-    return {
+    const tx = {
       to,
       data: calldata,
       value: 0n,
       gasLimit: gasLimit ? gasLimit * BigInt(requests.length) : null,
       ...fee,
     }
+
+    if (!tx.gasLimit) {
+      const provider = providerByChainId(chainId)
+      const estimateGasLimit = await provider.estimateGas(tx)
+
+      tx.gasLimit = (estimateGasLimit * 15n) / 10n
+    }
+
+    return tx
   }
 }
 
