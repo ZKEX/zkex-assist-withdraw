@@ -3,13 +3,18 @@ import {
   PackedTransaction,
   Request,
 } from 'parallel-signer'
-import { SUBMITTER_FEE_POLICY, gasLimitForChains } from './conf'
+import {
+  SUBMITTER_FEE_POLICY,
+  SUBMITTER_PRIVATE_KEY,
+  gasLimitForChains,
+} from './conf'
 import { pool } from './db'
 import { fetchFeeData } from './scanner'
 import { Address, ChainId } from './types'
 import { MULTICALL_INTERFACE } from './utils'
 import { decodeWithdrawData } from './utils/withdrawal'
 import { providerByChainId } from './utils/providers'
+import { Wallet } from 'ethers'
 
 /**
  * Assembling TransactionRequest data for sending the transaction.
@@ -83,7 +88,9 @@ export function populateTransaction(
 
     let gasLimit = gasLimitForChains[chainId]
 
+    const wallet = new Wallet(SUBMITTER_PRIVATE_KEY)
     const tx = {
+      from: wallet.address,
       to,
       data: calldata,
       value: 0n,
