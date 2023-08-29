@@ -4,8 +4,11 @@ import { logger } from './log'
 import { monitor } from './monitor'
 import { registry } from './monitor/registry'
 import { watcher } from './watcher'
+import { getSupportTokens } from './utils/zklink'
 
 async function main() {
+  await getSupportTokens()
+
   logger.info(`EVENT_WATCHER_ENDPOINT ${EVENT_WATCHER_ENDPOINT}`)
   logger.info(`ZKLINK_STATIC_ENDPOINT ${ZKLINK_STATIC_ENDPOINT}`)
 

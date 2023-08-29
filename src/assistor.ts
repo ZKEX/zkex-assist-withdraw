@@ -40,6 +40,11 @@ import {
   ZKLINK_ABI,
   ZKLINK_INTERFACE,
 } from './utils'
+import {
+  getSupportTokens,
+  getTokenDecimals,
+  recoveryDecimals,
+} from './utils/zklink'
 
 export class AssistWithdraw {
   private signers: Record<number, ParallelSigner> = {}
@@ -256,6 +261,7 @@ export class AssistWithdraw {
     rows: WithdrawalRequestParams[]
   ): Promise<WithdrawalRequestParams[]> {
     let resultRows = [...rows]
+    const supportTokens = await getSupportTokens()
 
     // Check if the user truly has pending balance in main contract
     try {
@@ -292,7 +298,10 @@ export class AssistWithdraw {
     }
 
     // Filter the zero amount row
-    resultRows = resultRows.filter((v) => v.amount > 0)
+    resultRows = resultRows.filter((v) => {
+      const decimals = getTokenDecimals(supportTokens, v.chainId, v.tokenId)
+      return recoveryDecimals(v.amount, BigInt(decimals)) > 0
+    })
 
     // By the time it executes to this point, resultRows represents genuine withdrawal requests.
     resultRows = resultRows.map((v) => ({

@@ -21,6 +21,7 @@
     "ethers": "^6.7.1",
     "fastify": "^4.21.0",
     "jest": "^29.6.1",
+    "node-cache": "^5.1.2",
     "node-fetch": "^2",
     "parallel-signer": "^2.0.15",
     "pg": "^8.11.1",

@@ -94,7 +94,6 @@ export function populateTransaction(
     if (!tx.gasLimit) {
       const provider = providerByChainId(chainId)
       const estimateGasLimit = await provider.estimateGas(tx)
-
       tx.gasLimit = (estimateGasLimit * 15n) / 10n
     }
 

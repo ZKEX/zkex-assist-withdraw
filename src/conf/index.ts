@@ -29,6 +29,7 @@ export const EVENT_WATCHER_ENDPOINT = process.env.EVENT_WATCHER_ENDPOINT!
 export const POLLING_LOGS_INTERVAL = Number(process.env.POLLING_LOGS_INTERVAL)
 export const POLLING_LOGS_LIMIT = Number(process.env.POLLING_LOGS_LIMIT)
 
+export const ZKLINK_RPC_ENDPOINT = process.env.ZKLINK_RPC_ENDPOINT!
 export const ZKLINK_STATIC_ENDPOINT = process.env.ZKLINK_STATIC_ENDPOINT!
 
 // ---------------- topic ----------------
