@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import { ZKLINK_RPC_ENDPOINT } from '../conf'
 import { cache } from './cache'
-import { ChainId } from '../types'
+import { Address, ChainId, L2ChainId } from '../types'
 import { logger } from '../log'
 
 async function jsonrpc(method: string, params: any[], id: number = 0) {
@@ -40,18 +40,39 @@ export async function getSupportTokens(): Promise<SupportTokens> {
   return data
 }
 
+export type SupportChains = {
+  chainId: L2ChainId
+  layerOneChainId: ChainId
+  mainContract: Address
+}[]
+export async function getSupportChains(): Promise<SupportChains> {
+  const method = 'getSupportChains'
+  let data = cache.get(method) as SupportChains
+  if (data === undefined) {
+    data = await jsonrpc(method, []).then((r) => r.result)
+    cache.set(method, data)
+  }
+  return data
+}
+
 export function getTokenDecimals(
   supportTokens: SupportTokens,
   chainId: ChainId,
   tokenId: number
 ) {
   try {
-    return supportTokens[tokenId].chains[chainId].decimals
+    const chains = cache.get('getSupportChains') as SupportChains
+    const chain = chains.find(
+      (v) => Number(v.layerOneChainId) === Number(chainId)
+    )
+    if (!chain) {
+      throw new Error(`Cannot find layer2 chain id by ${chainId}`)
+    }
+    return supportTokens[tokenId].chains[chain.chainId].decimals
   } catch (e: any) {
     logger.error(
       `getTokenDecimals error chainId: ${chainId}, tokenId: ${tokenId}`
     )
-    logger.error(JSON.stringify(supportTokens))
     throw new Error(e?.message)
   }
 }
