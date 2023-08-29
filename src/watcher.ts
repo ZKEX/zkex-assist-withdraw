@@ -3,8 +3,10 @@ import './conf/index'
 import { CHAIN_IDS } from './conf/index'
 import { initBlockConfirmations, initChains, initEventProfile } from './scanner'
 import { fetchMulticallContracts } from './utils/multicall'
+import { getSupportTokens } from './utils/zklink'
 
 export async function watcher() {
+  await getSupportTokens()
   await fetchMulticallContracts()
   await initChains()
   await initEventProfile()

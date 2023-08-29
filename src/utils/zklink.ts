@@ -2,6 +2,7 @@ import fetch from 'node-fetch'
 import { ZKLINK_RPC_ENDPOINT } from '../conf'
 import { cache } from './cache'
 import { ChainId } from '../types'
+import { logger } from '../log'
 
 async function jsonrpc(method: string, params: any[], id: number = 0) {
   return fetch(`${ZKLINK_RPC_ENDPOINT}`, {
@@ -44,7 +45,15 @@ export function getTokenDecimals(
   chainId: ChainId,
   tokenId: number
 ) {
-  return supportTokens[tokenId].chains[chainId].decimals
+  try {
+    return supportTokens[tokenId].chains[chainId].decimals
+  } catch (e: any) {
+    logger.error(
+      `getTokenDecimals error chainId: ${chainId}, tokenId: ${tokenId}`
+    )
+    logger.error(JSON.stringify(supportTokens))
+    throw new Error(e?.message)
+  }
 }
 
 export function recoveryDecimals(balance: bigint, decimals: bigint) {
