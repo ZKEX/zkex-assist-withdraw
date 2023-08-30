@@ -98,6 +98,7 @@ export class AssistWithdraw {
         {
           requestCountLimit: MAXIMUM_PACK_TX_LIMIT,
           confirmations: blockConfirmations[chainId],
+          layer1ChainId: chainId,
         }
       )
       this.signers[chainId].init()
