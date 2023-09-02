@@ -1,6 +1,5 @@
 import { AssistWithdraw } from './assistor'
 import './conf/index'
-import { CHAIN_IDS } from './conf/index'
 import {
   initBlockConfirmations,
   initEventChains,

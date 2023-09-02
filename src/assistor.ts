@@ -1,4 +1,4 @@
-import { zeroPadValue } from 'ethers'
+import { TransactionReceipt } from 'ethers'
 import { ParallelSigner } from 'parallel-signer'
 import {
   CHAIN_IDS,
@@ -6,7 +6,7 @@ import {
   POLLING_LOGS_INTERVAL,
   SUBMITTER_PRIVATE_KEY,
 } from './conf'
-import { selectMaxProcessedLogId } from './db/process'
+import { selectMaxProcessedLogId } from './db/query'
 import { logger } from './log'
 import { metricStartupProcessCount, updateMetric } from './monitor/registry'
 import { OrderedRequestStore, populateTransaction } from './parallel'
@@ -27,22 +27,9 @@ import {
   groupingRequestParams,
 } from './utils/withdrawal'
 import { ChainId } from './types'
-import {
-  callMulticall,
-  getMulticallContractByChainId,
-  getMulticallContracts,
-} from './utils/multicall'
+import { getMulticallContracts } from './utils/multicall'
 import { providerByChainId } from './utils/providers'
-import {
-  MAXIMUM_WITHDRAWAL_AMOUNT,
-  ZKLINK_ABI,
-  ZKLINK_INTERFACE,
-} from './utils'
-import {
-  getSupportTokens,
-  getTokenDecimals,
-  recoveryDecimals,
-} from './utils/zklink'
+import { updateWithdrawalHash } from './explorer'
 
 export class AssistWithdraw {
   private signers: Record<number, ParallelSigner> = {}
@@ -54,7 +41,6 @@ export class AssistWithdraw {
     const chains = getEventChains()
     const multicallContracts = getMulticallContracts()
 
-    console.log(chainIds)
     for (let k of chainIds) {
       const chainId = Number(k)
 
@@ -88,6 +74,22 @@ export class AssistWithdraw {
           requestCountLimit: MAXIMUM_PACK_TX_LIMIT,
           confirmations: blockConfirmations[chainId],
           layer1ChainId: chainId,
+          checkConfirmation: async (txReceipt: TransactionReceipt) => {
+            try {
+              if (!txReceipt) {
+                throw new Error(`txReceipt is null, chain: ${chainId}`)
+              }
+              if (!txReceipt?.hash) {
+                throw new Error(
+                  `cannot find hash in txReceipt, chain: ${chainId}`
+                )
+              }
+              updateWithdrawalHash(chainId, txReceipt.hash)
+            } catch (e: any) {
+              logger.error(e?.message)
+              logger.error(e)
+            }
+          },
         }
       )
       this.signers[chainId].init()
@@ -151,11 +153,14 @@ export class AssistWithdraw {
       const { recepient, tokenId, amount } = decodedData
 
       withdrawParams.push({
+        ethHash: logs[i].log.transactionHash,
         chainId: logs[i].chainId,
         recepient: compressAddress(recepient),
         tokenId,
         amount,
         logId: logs[i].id,
+        logIndex: logs[i].log.logIndex,
+        calldata: '',
       })
     }
 
@@ -177,7 +182,12 @@ export class AssistWithdraw {
             `encode withdraw for chain ${chainId}: ${v.recepient} ${v.tokenId} ${v.amount}`
           )
           return {
-            functionData: encodeWithdrawData(v.recepient, v.tokenId, v.amount),
+            functionData: JSON.stringify({
+              ...v,
+              tokenId: v.tokenId.toString(), // JSON can not serialize bigint
+              amount: v.amount.toString(), // JSON can not serialize bigint
+              calldata: encodeWithdrawData(v.recepient, v.tokenId, v.amount),
+            }),
             logId: v.logId,
           }
         })
@@ -240,62 +250,6 @@ export class AssistWithdraw {
     } else {
       throw new Error(`Resore offset id fail, offset: ${offsetId}`)
     }
-  }
-
-  async filterAvailableBalanceRequests(
-    chainId: ChainId,
-    rows: WithdrawalRequestParams[]
-  ): Promise<WithdrawalRequestParams[]> {
-    let resultRows = [...rows]
-    const supportTokens = await getSupportTokens()
-
-    // Check if the user truly has pending balance in main contract
-    try {
-      const provider = providerByChainId(chainId)
-      const mainContract = getMainContractByChainId(chainId)
-      const multicallContract = getMulticallContractByChainId(chainId)
-      const callAddresses = []
-      const calls = []
-      for (let i in resultRows) {
-        const row = resultRows[i]
-        const calldata = ZKLINK_INTERFACE.encodeFunctionData(
-          'getPendingBalance',
-          [zeroPadValue(row.recepient, 32), row.tokenId]
-        )
-        callAddresses.push(mainContract)
-        calls.push(calldata)
-      }
-
-      const results: bigint[] = await callMulticall(
-        provider,
-        multicallContract,
-        ZKLINK_ABI,
-        'getPendingBalance',
-        callAddresses,
-        calls
-      )
-
-      results.forEach((v, i) => {
-        resultRows[i].amount = v
-      })
-    } catch (e: any) {
-      logger.error(`fetch available balance fail. ${chainId}`)
-      logger.error(e?.message)
-    }
-
-    // Filter the zero amount row
-    resultRows = resultRows.filter((v) => {
-      const decimals = getTokenDecimals(supportTokens, v.chainId, v.tokenId)
-      return recoveryDecimals(v.amount, BigInt(decimals)) > 0
-    })
-
-    // By the time it executes to this point, resultRows represents genuine withdrawal requests.
-    resultRows = resultRows.map((v) => ({
-      ...v,
-      amount: MAXIMUM_WITHDRAWAL_AMOUNT,
-    }))
-
-    return resultRows
   }
 
   async watchNewEventLogs() {

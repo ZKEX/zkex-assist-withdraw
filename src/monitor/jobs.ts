@@ -3,7 +3,7 @@ import { Registry } from 'prom-client'
 import {
   selectCountEachChain,
   selectProcessedLogIdEachChain,
-} from '../db/process'
+} from '../db/query'
 import { fetchCountLogs, getEventProfile } from '../scanner'
 import { withdrawalEventTopic } from '../utils/withdrawal'
 import {

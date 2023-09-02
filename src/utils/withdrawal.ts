@@ -4,10 +4,13 @@ import { EVENT_NAME } from '../conf'
 import { Address, ChainId, HexString } from '../types'
 
 export interface WithdrawalEventParams {
+  ethHash: string
   chainId: ChainId
   recepient: Address
   tokenId: number
   amount: bigint
+  calldata: string
+  logIndex: number
 }
 
 export interface WithdrawalRequestParams extends WithdrawalEventParams {

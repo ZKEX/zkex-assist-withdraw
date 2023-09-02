@@ -12,7 +12,7 @@ import { pool } from './db'
 import { fetchFeeData } from './scanner'
 import { Address, ChainId } from './types'
 import { MULTICALL_INTERFACE } from './utils'
-import { decodeWithdrawData } from './utils/withdrawal'
+import { WithdrawalRequestParams, decodeWithdrawData } from './utils/withdrawal'
 import { providerByChainId } from './utils/providers'
 import { Wallet } from 'ethers'
 
@@ -47,10 +47,10 @@ export function populateTransaction(
       const amounts: bigint[] = []
 
       requests.forEach((r) => {
-        const d = decodeWithdrawData(r.functionData)
-        recepients.push(d.recepient)
-        tokenIds.push(d.tokenId)
-        amounts.push(d.amount)
+        const jsonData: WithdrawalRequestParams = JSON.parse(r.functionData)
+        recepients.push(jsonData.recepient)
+        tokenIds.push(BigInt(jsonData.tokenId))
+        amounts.push(BigInt(jsonData.amount))
       })
       const fragment = MULTICALL_INTERFACE.getFunction(
         'batchWithdrawPendingBalance'
@@ -64,7 +64,10 @@ export function populateTransaction(
     // If the current 'requests' queue contains only one entry, then send the transaction directly to 'mainContract'.
     else if (requests.length === 1) {
       to = mainContract
-      calldata = requests[0].functionData
+      const jsonData: WithdrawalRequestParams = JSON.parse(
+        requests[0].functionData
+      )
+      calldata = jsonData.calldata
     } else {
     }
 

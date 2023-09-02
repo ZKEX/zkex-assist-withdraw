@@ -30,6 +30,7 @@ export const POLLING_LOGS_INTERVAL = Number(process.env.POLLING_LOGS_INTERVAL)
 export const POLLING_LOGS_LIMIT = Number(process.env.POLLING_LOGS_LIMIT)
 
 export const ZKLINK_RPC_ENDPOINT = process.env.ZKLINK_RPC_ENDPOINT!
+export const ZKLINK_SCAN_ENDPOINT = process.env.ZKLINK_SCAN_ENDPOINT!
 export const ZKLINK_STATIC_ENDPOINT = process.env.ZKLINK_STATIC_ENDPOINT!
 
 // ---------------- topic ----------------

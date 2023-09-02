@@ -4,7 +4,7 @@ import { cache } from './cache'
 import { Address, ChainId, L2ChainId } from '../types'
 import { logger } from '../log'
 
-async function jsonrpc(method: string, params: any[], id: number = 0) {
+async function zklinkRpc(method: string, params: any[], id: number = 0) {
   return fetch(`${ZKLINK_RPC_ENDPOINT}`, {
     method: 'POST',
     headers: {
@@ -34,7 +34,7 @@ export async function getSupportTokens(): Promise<SupportTokens> {
   const method = 'getSupportTokens'
   let data = cache.get(method) as SupportTokens
   if (data === undefined) {
-    data = await jsonrpc(method, []).then((r) => r.result)
+    data = await zklinkRpc(method, []).then((r) => r.result)
     cache.set(method, data)
   }
   return data
@@ -49,7 +49,7 @@ export async function getSupportChains(): Promise<SupportChains> {
   const method = 'getSupportChains'
   let data = cache.get(method) as SupportChains
   if (data === undefined) {
-    data = await jsonrpc(method, []).then((r) => r.result)
+    data = await zklinkRpc(method, []).then((r) => r.result)
     cache.set(method, data)
   }
   return data

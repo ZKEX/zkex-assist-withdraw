@@ -5,7 +5,7 @@ import { EVENT_WATCHER_ENDPOINT, POLLING_LOGS_LIMIT } from './conf/index'
 import { Address, BlockNumber, EventName, HexString, Topic, Wei } from './types'
 import { withdrawalEventTopic } from './utils/withdrawal'
 
-async function jsonrpc(method: string, params: any[] = [], id: number = 1) {
+async function scannerRpc(method: string, params: any[] = [], id: number = 1) {
   return fetch(EVENT_WATCHER_ENDPOINT, {
     method: 'POST',
     body: JSON.stringify({
@@ -29,7 +29,7 @@ export interface EventChainInfo {
   requestRetryDelay: number
 }
 export async function fetchEventChains(): Promise<EventChainInfo[]> {
-  return jsonrpc('watcher_getChains').then((r) => r.result)
+  return scannerRpc('watcher_getChains').then((r) => r.result)
 }
 
 let chains: EventChainInfo[] = []
@@ -52,7 +52,7 @@ export interface EventProfile {
   }
 }
 export async function fetchEventProfile(topic: Topic): Promise<EventProfile> {
-  return jsonrpc('watcher_getEventProfile', [topic]).then((r) => r.result)
+  return scannerRpc('watcher_getEventProfile', [topic]).then((r) => r.result)
 }
 
 let eventProfile: EventProfile
@@ -91,7 +91,7 @@ export interface EventLog {
 export async function fetchEventLogs(
   offsetId: number = 0
 ): Promise<EventLog[]> {
-  return jsonrpc('watcher_getEventLogs', [
+  return scannerRpc('watcher_getEventLogs', [
     {
       topic: withdrawalEventTopic,
       offsetId,
@@ -122,12 +122,12 @@ export interface GetFeeDataResult {
 export async function fetchFeeData(
   chainId: ChainId
 ): Promise<GetFeeDataResult> {
-  return jsonrpc('watcher_getFeeData', [chainId]).then((r) => r.result)
+  return scannerRpc('watcher_getFeeData', [chainId]).then((r) => r.result)
 }
 
 export type GetBlockConfirmationsResult = Record<ChainId, number>
 export async function fetchBlockConfirmations(): Promise<GetBlockConfirmationsResult> {
-  return jsonrpc('watcher_getBlockConfirmations', []).then((r) => r.result)
+  return scannerRpc('watcher_getBlockConfirmations', []).then((r) => r.result)
 }
 
 export let blockConfirmations: GetBlockConfirmationsResult
@@ -141,7 +141,7 @@ export async function fetchCountLogs(
   contractAddress: Address,
   logId: number
 ): Promise<number> {
-  return jsonrpc('watcher_countLogs', [
+  return scannerRpc('watcher_countLogs', [
     topic,
     chainId,
     contractAddress,
