@@ -252,6 +252,34 @@ export class OrderedRequestStore implements IOrderedRequestStore {
       return buildPackedTransaction(v)
     })
   }
+
+  async getUnconfirmedTransactionsWithSameNonce(
+    chainId: number,
+    nonce: number
+  ): Promise<PackedTransaction[]> {
+    const r = await pool.query(`
+      WITH NonceWithAllZero AS (
+        SELECT 
+          nonce
+        FROM 
+          packed_transactions
+        WHERE 
+          nonce < ${nonce} and chain_id = ${chainId}
+        GROUP BY 
+          nonce
+        HAVING 
+          SUM(confirmation) = 0 AND COUNT(*) >= 1
+      ) SELECT 
+        p.*
+      FROM 
+        packed_transactions p
+      JOIN 
+        NonceWithAllZero nz ON p.nonce = nz.nonce
+      WHERE 
+        chain_id = ${chainId} and p.confirmation = 0;
+    `)
+    return r.rows.map((v) => buildPackedTransaction(v))
+  }
 }
 
 function buildRequest(obj: {

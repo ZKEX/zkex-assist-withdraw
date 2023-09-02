@@ -1,4 +1,4 @@
-import { JsonRpcProvider, parseEther, zeroPadValue } from 'ethers'
+import { zeroPadValue } from 'ethers'
 import { ParallelSigner } from 'parallel-signer'
 import {
   CHAIN_IDS,
@@ -13,9 +13,8 @@ import { OrderedRequestStore, populateTransaction } from './parallel'
 import {
   EventLog,
   blockConfirmations,
-  fetchChains,
   fetchEventLogs,
-  getChains,
+  getEventChains,
   getEventProfile,
   getMainContractByChainId,
 } from './scanner'
@@ -26,9 +25,8 @@ import {
   decodeWithdrawalLog,
   encodeWithdrawData,
   groupingRequestParams,
-  mergeEventRequestParams,
 } from './utils/withdrawal'
-import { Address, ChainId } from './types'
+import { ChainId } from './types'
 import {
   callMulticall,
   getMulticallContractByChainId,
@@ -53,19 +51,10 @@ export class AssistWithdraw {
 
   async initSigners(chainIds: ChainId[]) {
     logger.info(`Enabled chain id: ${chainIds}`)
-    const chains = getChains()
-    // TODO: mock data
-    // ------------------ >
+    const chains = getEventChains()
     const multicallContracts = getMulticallContracts()
-    // --------------------
-    // const multicallContracts: Record<ChainId, Address> = {
-    //   80001: '0x57d128a3A7672CCf98Def4E443701Bc9a515b3d8',
-    //   43113: '0x1Da73Ce004339ec8dACb2Ca25623eDDd3CFE7b82',
-    //   97: '0x1db5D85963BdE5A4Ff570Db4B341ad9Bba812fa2',
-    //   5: '0x0df4860aFf443d714a5dFF6C9bF9f9aDd2927657',
-    // }
-    // ------------------ <
 
+    console.log(chainIds)
     for (let k of chainIds) {
       const chainId = Number(k)
 
@@ -170,7 +159,7 @@ export class AssistWithdraw {
       })
     }
 
-    return mergeEventRequestParams(withdrawParams)
+    return withdrawParams
   }
 
   async submitTransactions(
@@ -182,10 +171,7 @@ export class AssistWithdraw {
       const groupedRequests = groupingRequestParams(mergedRequests)
 
       for (let chainId in groupedRequests) {
-        const rows = await this.filterAvailableBalanceRequests(
-          Number(chainId),
-          groupedRequests[chainId]
-        )
+        const rows = groupedRequests[chainId]
         const txs = rows.map((v) => {
           logger.debug(
             `encode withdraw for chain ${chainId}: ${v.recepient} ${v.tokenId} ${v.amount}`
@@ -196,14 +182,13 @@ export class AssistWithdraw {
           }
         })
 
-        // logger.debug(`Send txs: ${JSON.stringify(txs)}`)
-
         updateMetric(() => {
           metricStartupProcessCount.labels(chainId.toString()).inc(txs.length)
         })
 
         // If the layerOneChainId is offline or disabled, only save the requests to db
         if (CHAIN_IDS.includes(Number(chainId)) === false) {
+          logger.debug(`Chain ${chainId} is not enabled, only save to requests`)
           this.requestStore.setRequests(
             txs.map((v) => ({
               ...v,

@@ -20,7 +20,7 @@ async function jsonrpc(method: string, params: any[] = [], id: number = 1) {
   }).then((r) => r.json())
 }
 
-export interface ChainInfo {
+export interface EventChainInfo {
   chainId: ChainId
   web3Url: string
   viewBlockStep: number
@@ -28,15 +28,15 @@ export interface ChainInfo {
   requestDelay: number
   requestRetryDelay: number
 }
-export async function fetchChains(): Promise<ChainInfo[]> {
+export async function fetchEventChains(): Promise<EventChainInfo[]> {
   return jsonrpc('watcher_getChains').then((r) => r.result)
 }
 
-let chains: ChainInfo[] = []
-export async function initChains() {
-  chains = await fetchChains()
+let chains: EventChainInfo[] = []
+export async function initEventChains() {
+  chains = await fetchEventChains()
 }
-export function getChains() {
+export function getEventChains() {
   return chains
 }
 
