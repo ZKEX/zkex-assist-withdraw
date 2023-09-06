@@ -4,6 +4,7 @@ import {
   CHAIN_IDS,
   MAXIMUM_PACK_TX_LIMIT,
   POLLING_LOGS_INTERVAL,
+  START_LOG_ID,
   SUBMITTER_PRIVATE_KEY,
 } from './conf'
 import { selectMaxProcessedLogId } from './db/query'
@@ -242,13 +243,13 @@ export class AssistWithdraw {
     // it is necessary to query the last processed log ID from the database and continue the task from that point.
     if (offsetId > 0) {
       this.updateOffsetId(offsetId)
+    } else if (START_LOG_ID) {
+      this.offsetId = START_LOG_ID
     }
-    // When there are no records in the database, the query result should be null.
-    // In this case, use offsetId=0 to start the task from the beginning of the log service.
-    else if (offsetId === null) {
+
+    // If there are no records in the table and no starting point is configured, then start from 0.
+    if (!this.offsetId) {
       this.offsetId = 0
-    } else {
-      throw new Error(`Resore offset id fail, offset: ${offsetId}`)
     }
   }
 

@@ -15,6 +15,11 @@ export const SUBMITTER_FEE_POLICY: 'standard' | 'fast' | 'rapid' = process.env
 // This number is used to control the maximum number of transactions to be merged.
 export const MAXIMUM_PACK_TX_LIMIT = Number(process.env.MAXIMUM_PACK_TX_LIMIT)
 
+// If there are no records in the requests table, then the log processing will start from here.
+export const START_LOG_ID = process.env.START_LOG_ID
+  ? Number(process.env.START_LOG_ID)
+  : 0
+
 export const CHAIN_IDS: ChainId[] = process.env
   .CHAIN_IDS!.split(',')
   .map((v) => Number(v))

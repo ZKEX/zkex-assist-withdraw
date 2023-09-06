@@ -40,7 +40,7 @@ export function populateTransaction(
   }> {
     let to = ''
     let calldata = ''
-    if (requests.length > 1) {
+    if (requests.length >= 1) {
       to = multicallContract // multiple sender contract address
       const recepients: Address[] = []
       const tokenIds: bigint[] = []
@@ -62,14 +62,14 @@ export function populateTransaction(
       ])
     }
     // If the current 'requests' queue contains only one entry, then send the transaction directly to 'mainContract'.
-    else if (requests.length === 1) {
-      to = mainContract
-      const jsonData: WithdrawalRequestParams = JSON.parse(
-        requests[0].functionData
-      )
-      calldata = jsonData.calldata
-    } else {
-    }
+    // else if (requests.length === 1) {
+    //   to = mainContract
+    //   const jsonData: WithdrawalRequestParams = JSON.parse(
+    //     requests[0].functionData
+    //   )
+    //   calldata = jsonData.calldata
+    // } else {
+    // }
 
     // Retrieve the latest fee configuration through the event watcher service.
     const feeData = await fetchFeeData(chainId)

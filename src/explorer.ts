@@ -23,7 +23,7 @@ async function explorerRpc(method: string, params: any[] = [], id: number = 1) {
 export interface updateWithdrawalItem {
   executedHash: string
   toAddress: Address
-  chainId: ChainId
+  chainId: string // Layer one chain id
   amount: string
   tokenId: number
   logIndex: number
@@ -42,9 +42,9 @@ export async function updateWithdrawalHash(
     const params: updateWithdrawalItem[] = requests.map((v) => ({
       executedHash: v.ethHash,
       toAddress: v.recepient,
-      chainId: v.chainId,
+      chainId: v.chainId.toString(),
       amount: v.amount.toString(),
-      tokenId: v.tokenId,
+      tokenId: Number(v.tokenId),
       logIndex: v.logIndex,
       withdrawHash: packedHash,
     }))
@@ -56,9 +56,11 @@ export async function updateWithdrawalHash(
         `Chain: ${v.chainId}, Executed Hash: ${v.executedHash}, To Address: ${v.toAddress}, Token: ${v.tokenId}, Amount: ${v.amount}, Log Index: ${v.logIndex}`
       )
     })
-    const r = await explorerRpc('update_withdraw_hash', params).catch((e) => {
+    const r = await explorerRpc('update_withdraw_hash', [params]).catch((e) => {
       throw e
     })
+
+    console.log(r)
 
     if (r.error) {
       throw new Error(
@@ -66,7 +68,7 @@ export async function updateWithdrawalHash(
       )
     }
 
-    if (r.result) {
+    if (r.result || r.result === null) {
       logger.info(
         `Update packed hash success, chain: ${chainId}, packed hash: ${packedHash}, requestIds: ${requestIds}`
       )

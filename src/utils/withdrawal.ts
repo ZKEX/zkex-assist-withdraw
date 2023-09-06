@@ -17,6 +17,7 @@ export interface WithdrawalRequestParams extends WithdrawalEventParams {
   logId: number // log id, event watcher primary key
 }
 
+// 0x3cfb74f0f066330f203d8ac39c3fef52fc056de4d011fc7d91dadd9ba6983416
 export const withdrawalEventFragment = ZKLINK_INTERFACE.getEvent(EVENT_NAME)!
 export const withdrawalEventTopic = withdrawalEventFragment.topicHash
 
