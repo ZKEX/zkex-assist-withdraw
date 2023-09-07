@@ -16,9 +16,9 @@ export async function watcher() {
   await initEventProfile()
   await initBlockConfirmations()
 
-  const assistor = new AssistWithdraw()
-  await assistor.initSigners(
-    supportChains.map((v) => Number(v.layerOneChainId))
-  )
-  assistor.watchNewEventLogs()
+  // const assistor = new AssistWithdraw()
+  // await assistor.initSigners(
+  //   supportChains.map((v) => Number(v.layerOneChainId))
+  // )
+  // assistor.watchNewEventLogs()
 }
