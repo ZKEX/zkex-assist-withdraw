@@ -19,6 +19,7 @@ export async function server() {
   app.get('/transactions/list', getPackedTransactions)
   app.post('/withdrawal', postWithdrawalTxs)
   app.get('/balance/:account/:chainId', getPendingBalance)
+  app.get('/balance/:account', getPendingBalance)
 
   app.listen({ port: PORT }, () => {
     console.log(`Server started on port ${PORT}`)

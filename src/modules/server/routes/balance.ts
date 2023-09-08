@@ -57,18 +57,37 @@ async function batchGetPendingBalance(chainId: ChainId, account: Address) {
     }
   })
 
-  return result
+  return result.filter((v) => v.balance > 0n)
 }
 
 export async function getPendingBalance(req: Request, res: Response) {
   try {
-    let { account, chainId } = req.params
+    const account = req.params.account
+    const chainId = req.params.chainId ? Number(req.params.chainId) : undefined
 
-    const balances = await batchGetPendingBalance(Number(chainId), account)
+    const data: Record<
+      ChainId,
+      { tokenId: number; symbol: string; balance: string }[]
+    > = {}
+
+    if (chainId) {
+      data[chainId] = await batchGetPendingBalance(Number(chainId), account)
+    } else {
+      const supportChains = await getSupportChains()
+
+      const qs = supportChains.map((v) => {
+        return batchGetPendingBalance(Number(v.layerOneChainId), account)
+      })
+      const rs = await Promise.all(qs)
+
+      supportChains.forEach((v, i) => {
+        data[v.layerOneChainId] = rs[i]
+      })
+    }
 
     res.json({
       code: 0,
-      data: balances.filter((v) => v.balance > 0n),
+      data,
     })
   } catch (e: any) {
     logger.error(e)
