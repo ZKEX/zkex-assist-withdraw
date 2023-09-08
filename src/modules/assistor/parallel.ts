@@ -260,7 +260,7 @@ export class OrderedRequestStore implements IOrderedRequestStore {
   }
 
   async getUnconfirmedTransactionsWithSameNonce(
-    chainId: number,
+    chainID: number,
     nonce: number
   ): Promise<PackedTransaction[]> {
     const r = await pool.query(`
@@ -270,7 +270,7 @@ export class OrderedRequestStore implements IOrderedRequestStore {
         FROM 
           packed_transactions
         WHERE 
-          nonce < ${nonce} and chain_id = ${chainId}
+          nonce < ${nonce} and chain_id = ${chainID}
         GROUP BY 
           nonce
         HAVING 
@@ -282,7 +282,7 @@ export class OrderedRequestStore implements IOrderedRequestStore {
       JOIN 
         NonceWithAllZero nz ON p.nonce = nz.nonce
       WHERE 
-        chain_id = ${chainId} and p.confirmation = 0;
+        chain_id = ${chainID} and  p.confirmation = 0;
     `)
     return r.rows.map((v) => buildPackedTransaction(v))
   }
