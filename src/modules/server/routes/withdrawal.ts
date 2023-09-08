@@ -65,7 +65,7 @@ async function handleWithdraw(body: RequestsBody): Promise<string | false> {
     to: multicall,
     data: calldata,
     nonce,
-    gasLimit: estimateGasLimit(chainId, txs.length) || 10000000n,
+    gasLimit: estimateGasLimit(chainId, txs.length),
     ...fee,
   })
   const timer = setTimeout(() => {
