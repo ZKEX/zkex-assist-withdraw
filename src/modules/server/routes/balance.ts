@@ -30,7 +30,9 @@ async function batchGetPendingBalance(chainId: ChainId, account: Address) {
     (v) => Number(v.layerOneChainId) === Number(chainId)
   )
 
-  const tokens = Object.values(supportTokens).map((v) => v.id)
+  const tokens = Object.values(supportTokens)
+    .map((v) => v.id)
+    .filter((v) => v > 17)
 
   const callAddresses = tokens.map((v) => chain?.mainContract!)
   const calls: string[] = tokens.map((id) => {
@@ -57,7 +59,12 @@ async function batchGetPendingBalance(chainId: ChainId, account: Address) {
     }
   })
 
-  return result.filter((v) => v.balance > 0n)
+  return result
+    .filter((v) => v.balance > 0n)
+    .map((v) => ({
+      ...v,
+      balance: v.balance.toString(),
+    }))
 }
 
 export async function getPendingBalance(req: Request, res: Response) {
