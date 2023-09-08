@@ -1,4 +1,4 @@
-import { dataSlice, getBytes } from 'ethers'
+import { dataSlice, getBytes, zeroPadValue } from 'ethers'
 import { ZKLINK_INTERFACE } from '.'
 import { EVENT_NAME } from '../conf'
 import { Address, ChainId, HexString } from '../types'
@@ -28,6 +28,10 @@ export function decodeWithdrawalLog(data: HexString, topics: HexString[]) {
     topics
   )
   return decodedData
+}
+
+export function extendAddress(address: Address) {
+  return zeroPadValue(address, 32)
 }
 
 // compress the bytes32 address to bytes20

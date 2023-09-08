@@ -6,6 +6,7 @@ import { metrics } from './routes/metrics'
 import { getRequests } from './routes/getRequests'
 import { getPackedTransactions } from './routes/getPackedTransactions'
 import { postWithdrawalTxs } from './routes/withdrawal'
+import { getPendingBalance } from './routes/balance'
 
 export async function server() {
   const app = express()
@@ -17,6 +18,7 @@ export async function server() {
   app.get('/requests/list', getRequests)
   app.get('/transactions/list', getPackedTransactions)
   app.post('/withdrawal', postWithdrawalTxs)
+  app.get('/balance/:account/:chainId', getPendingBalance)
 
   app.listen({ port: PORT }, () => {
     console.log(`Server started on port ${PORT}`)
