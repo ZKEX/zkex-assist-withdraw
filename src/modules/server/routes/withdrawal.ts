@@ -56,7 +56,7 @@ async function handleWithdraw(body: RequestsBody): Promise<string | false> {
 
   if (Number(chainId) === 56) {
     fee.gasPrice = parseUnits(maxFeePerGas, 'gwei')
-  } else {
+  } else if (maxFeePerGas) {
     fee.maxFeePerGas = parseUnits(maxFeePerGas, 'gwei')
     fee.maxPriorityFeePerGas = parseUnits(maxPriorityFeePerGas, 'gwei')
   }
