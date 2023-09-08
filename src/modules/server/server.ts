@@ -5,6 +5,7 @@ import bodyParser from 'body-parser'
 import { metrics } from './routes/metrics'
 import { getRequests } from './routes/getRequests'
 import { getPackedTransactions } from './routes/getPackedTransactions'
+import { postWithdrawalTxs } from './routes/withdrawal'
 
 export async function server() {
   const app = express()
@@ -15,6 +16,7 @@ export async function server() {
   app.get('/metrics', metrics)
   app.get('/requests/list', getRequests)
   app.get('/transactions/list', getPackedTransactions)
+  app.post('/withdrawal', postWithdrawalTxs)
 
   app.listen({ port: PORT }, () => {
     console.log(`Server started on port ${PORT}`)
