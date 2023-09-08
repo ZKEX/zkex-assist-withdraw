@@ -8,7 +8,11 @@ import {
   ZKLINK_INTERFACE,
 } from '../../../utils'
 import { extendAddress } from '../../../utils/withdrawal'
-import { getSupportChains, getSupportTokens } from '../../../utils/zklink'
+import {
+  getSupportChains,
+  getSupportTokens,
+  recoveryDecimals,
+} from '../../../utils/zklink'
 import {
   callMulticall,
   getMulticallContractByChainId,
@@ -52,10 +56,13 @@ async function batchGetPendingBalance(chainId: ChainId, account: Address) {
   )
 
   const result = tokens.map((v, i) => {
+    const decimals = supportTokens[v].chains[chainId].decimals
     return {
       tokenId: v,
+      decimals,
       symbol: supportTokens[v].symbol,
       balance: rs[i],
+      recoveryBalance: recoveryDecimals(rs[i], BigInt(decimals)),
     }
   })
 
@@ -64,6 +71,7 @@ async function batchGetPendingBalance(chainId: ChainId, account: Address) {
     .map((v) => ({
       ...v,
       balance: v.balance.toString(),
+      recoveryBalance: v.recoveryBalance.toString(),
     }))
 }
 
@@ -74,7 +82,13 @@ export async function getPendingBalance(req: Request, res: Response) {
 
     const data: Record<
       ChainId,
-      { tokenId: number; symbol: string; balance: string }[]
+      {
+        tokenId: number
+        decimals: number
+        symbol: string
+        balance: string
+        recoveryBalance: string
+      }[]
     > = {}
 
     if (chainId) {
