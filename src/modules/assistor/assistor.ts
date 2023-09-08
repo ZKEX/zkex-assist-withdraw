@@ -162,6 +162,13 @@ export class AssistWithdraw {
       const decimals = getTokenDecimals(supportTokens, logs[i].chainId, tokenId)
       const recoveryAmount = recoveryDecimals(amount, BigInt(decimals))
       if (amount > 0n && recoveryAmount === 0n) {
+        logger.info(
+          `Skip the dust amount logs, ${
+            logs[i].chainId
+          }, ${amount}, ${compressAddress(recepient)}, ${
+            logs[i].log.transactionHash
+          }`
+        )
         continue
       }
 
