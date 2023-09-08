@@ -33,10 +33,12 @@ async function batchGetPendingBalance(chainId: ChainId, account: Address) {
   const chain = supportChains.find(
     (v) => Number(v.layerOneChainId) === Number(chainId)
   )
+  const layer2ChainId = chain?.chainId!
 
   const tokens = Object.values(supportTokens)
     .map((v) => v.id)
-    .filter((v) => v > 17)
+    .filter((v) => Number(v) > 17)
+    .filter((v) => supportTokens[v].chains[layer2ChainId] !== undefined)
 
   const callAddresses = tokens.map((v) => chain?.mainContract!)
   const calls: string[] = tokens.map((id) => {
@@ -55,12 +57,15 @@ async function batchGetPendingBalance(chainId: ChainId, account: Address) {
     calls
   )
 
-  const result = tokens.map((v, i) => {
-    const decimals = supportTokens[v].chains[chainId].decimals
+  if (!rs.length) {
+    return null
+  }
+  const result = tokens.map((tokenId, i) => {
+    const decimals = supportTokens[tokenId].chains[layer2ChainId].decimals
     return {
-      tokenId: v,
+      tokenId,
       decimals,
-      symbol: supportTokens[v].symbol,
+      symbol: supportTokens[tokenId].symbol,
       balance: rs[i],
       recoveryBalance: recoveryDecimals(rs[i], BigInt(decimals)),
     }
@@ -92,7 +97,10 @@ export async function getPendingBalance(req: Request, res: Response) {
     > = {}
 
     if (chainId) {
-      data[chainId] = await batchGetPendingBalance(Number(chainId), account)
+      const r = await batchGetPendingBalance(Number(chainId), account)
+      if (r !== null) {
+        data[chainId] = r
+      }
     } else {
       const supportChains = await getSupportChains()
 
@@ -102,7 +110,9 @@ export async function getPendingBalance(req: Request, res: Response) {
       const rs = await Promise.all(qs)
 
       supportChains.forEach((v, i) => {
-        data[v.layerOneChainId] = rs[i]
+        if (rs[i] !== null) {
+          data[v.layerOneChainId] = rs[i]!
+        }
       })
     }
 
