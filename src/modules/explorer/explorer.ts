@@ -34,6 +34,21 @@ export interface updateWithdrawalItem {
   withdrawHash: string
 }
 
+function saveWithdrawalHash(params: updateWithdrawalItem[], status: 1 | 2) {
+  params.forEach((v) => {
+    insertWithdrawalHash(
+      v.executedHash,
+      v.toAddress,
+      Number(v.chainId),
+      v.amount,
+      v.tokenId,
+      v.logIndex,
+      v.withdrawHash,
+      status
+    )
+  })
+}
+
 export async function updateWithdrawalHash(
   chainId: ChainId,
   packedHash: string
@@ -53,22 +68,13 @@ export async function updateWithdrawalHash(
       withdrawHash: packedHash,
     }))
     const r = await explorerRpc('update_withdraw_hash', [params]).catch((e) => {
+      saveWithdrawalHash(params, 2)
+
       throw e
     })
 
     if (r.error) {
-      params.forEach((v) => {
-        insertWithdrawalHash(
-          v.executedHash,
-          v.toAddress,
-          Number(v.chainId),
-          v.amount,
-          v.tokenId,
-          v.logIndex,
-          v.withdrawHash,
-          2
-        )
-      })
+      saveWithdrawalHash(params, 2)
       throw new PublicError(
         `Update withdrawal hash fail, chain: ${chainId}, packed hash: ${packedHash}, code: ${r.error.code}, message: ${r.error.message}`
       )
@@ -78,18 +84,7 @@ export async function updateWithdrawalHash(
       logger.info(
         `Update packed hash success, chain: ${chainId}, packed hash: ${packedHash}, requestIds: ${requestIds}`
       )
-      params.forEach((v) => {
-        insertWithdrawalHash(
-          v.executedHash,
-          v.toAddress,
-          Number(v.chainId),
-          v.amount,
-          v.tokenId,
-          v.logIndex,
-          v.withdrawHash,
-          1
-        )
-      })
+      saveWithdrawalHash(params, 1)
     }
   } catch (e: any) {
     logger.error(e?.message)

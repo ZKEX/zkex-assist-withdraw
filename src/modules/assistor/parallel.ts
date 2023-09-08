@@ -19,6 +19,7 @@ import {
 import { providerByChainId } from '../../utils/providers'
 import { Wallet } from 'ethers'
 import { PublicError } from '../../log'
+import { estimateGasLimit } from './gasLimit'
 
 /**
  * Assembling TransactionRequest data for sending the transaction.
@@ -93,15 +94,13 @@ export function populateTransaction(
       fee.gasPrice = BigInt(gasPrice)
     }
 
-    let gasLimit = gasLimitForChains[chainId]
-
     const wallet = new Wallet(SUBMITTER_PRIVATE_KEY)
     const tx = {
       from: wallet.address,
       to,
       data: calldata,
       value: 0n,
-      gasLimit: gasLimit ? gasLimit * BigInt(requests.length) : null,
+      gasLimit: estimateGasLimit(chainId, requests.length),
       ...fee,
     }
 
