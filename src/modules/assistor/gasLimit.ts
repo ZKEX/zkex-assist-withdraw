@@ -38,7 +38,7 @@ const singleTxGasLimit: {
   [MainnetChainIds.Polygon]: { singleTx: 200000, max: 30000000 },
   [MainnetChainIds.Avalanche]: { singleTx: 200000, max: 15000000 },
   [MainnetChainIds.BSC]: { singleTx: 200000, max: 50000000 },
-  [MainnetChainIds.Optimism]: { singleTx: 1000000, max: 50000000 },
+  [MainnetChainIds.Optimism]: { singleTx: 200000, max: 30000000 },
   [MainnetChainIds.Linea]: { singleTx: 200000, max: 61000000 },
   [MainnetChainIds.Base]: { singleTx: 200000, max: 25000000 },
   [MainnetChainIds.opBNB]: { singleTx: 200000, max: 100000000 },
@@ -54,7 +54,7 @@ const singleTxGasLimit: {
   [TestnetChainIds.Mantle]: { singleTx: 100000, max: 30000000 },
   [TestnetChainIds.opBNB]: { singleTx: 200000, max: 100000000 },
   [TestnetChainIds.Taiko]: { singleTx: 200000, max: 5180000 },
-  [TestnetChainIds.Optimism]: { singleTx: 1000000, max: 50000000 },
+  [TestnetChainIds.Optimism]: { singleTx: 200000, max: 30000000 },
   // [TestnetChainIds.ArbitrumGoerli]: { singleTx: 3000000, max: 1125899906842624 },
 }
 
