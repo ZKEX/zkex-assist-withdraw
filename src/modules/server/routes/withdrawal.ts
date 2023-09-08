@@ -61,17 +61,25 @@ async function handleWithdraw(body: RequestsBody): Promise<string | false> {
     fee.maxPriorityFeePerGas = parseUnits(maxPriorityFeePerGas, 'gwei')
   }
 
-  const tx = await wallet.sendTransaction({
+  const tx = {
+    from: wallet.address,
     to: multicall,
     data: calldata,
     nonce,
     gasLimit: estimateGasLimit(chainId, txs.length),
     ...fee,
-  })
+  }
+
+  if (!tx.gasLimit) {
+    const provider = providerByChainId(chainId)
+    const estimateGasLimit = await provider.estimateGas(tx)
+    tx.gasLimit = (estimateGasLimit * 15n) / 10n
+  }
+  const transaction = await wallet.sendTransaction(tx)
   const timer = setTimeout(() => {
     throw new Error(`Timeout ${chainId}`)
   }, 120000)
-  const wait = await tx.wait()
+  const wait = await transaction.wait()
 
   clearTimeout(timer)
 
