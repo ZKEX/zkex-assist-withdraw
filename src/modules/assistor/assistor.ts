@@ -31,6 +31,11 @@ import { ChainId } from '../../types'
 import { getMulticallContracts } from '../../utils/multicall'
 import { providerByChainId } from '../../utils/providers'
 import { updateWithdrawalHash } from '../explorer/explorer'
+import {
+  getSupportTokens,
+  getTokenDecimals,
+  recoveryDecimals,
+} from '../../utils/zklink'
 
 export class AssistWithdraw {
   private signers: Record<number, ParallelSigner> = {}
@@ -124,6 +129,7 @@ export class AssistWithdraw {
     logs: EventLog[]
   ): Promise<WithdrawalRequestParams[]> {
     if (!logs?.length) return []
+    const supportTokens = await getSupportTokens()
 
     const eventProfile = getEventProfile()
     /**
@@ -152,6 +158,12 @@ export class AssistWithdraw {
         logs[i].log.topics
       )
       const { recepient, tokenId, amount } = decodedData
+
+      const decimals = getTokenDecimals(supportTokens, logs[i].chainId, tokenId)
+      const recoveryAmount = recoveryDecimals(amount, BigInt(decimals))
+      if (amount > 0n && recoveryAmount === 0n) {
+        continue
+      }
 
       withdrawParams.push({
         ethHash: logs[i].log.transactionHash,
