@@ -2,7 +2,7 @@ import fetch from 'node-fetch'
 import { ZKLINK_RPC_ENDPOINT } from '../conf'
 import { cache } from './cache'
 import { Address, ChainId, L2ChainId } from '../types'
-import { logger } from '../log'
+import { PublicError, logger } from '../log'
 
 async function zklinkRpc(method: string, params: any[], id: number = 0) {
   return fetch(`${ZKLINK_RPC_ENDPOINT}`, {
@@ -66,14 +66,14 @@ export function getTokenDecimals(
       (v) => Number(v.layerOneChainId) === Number(chainId)
     )
     if (!chain) {
-      throw new Error(`Cannot find layer2 chain id by ${chainId}`)
+      throw new PublicError(`Cannot find layer2 chain id by ${chainId}`)
     }
     return supportTokens[tokenId].chains[chain.chainId].decimals
   } catch (e: any) {
     logger.error(
       `getTokenDecimals error chainId: ${chainId}, tokenId: ${tokenId}`
     )
-    throw new Error(e?.message)
+    throw new PublicError(e?.message)
   }
 }
 

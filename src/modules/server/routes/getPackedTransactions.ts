@@ -1,5 +1,5 @@
-import { getPackedTransactionsPagedData } from '../db/packedTransactions'
-import { logger } from '../log'
+import { getPackedTransactionsPagedData } from '../../../db/packedTransactions'
+import { PublicError, logger } from '../../../log'
 
 export async function getPackedTransactions(req: any, res: any) {
   try {
@@ -8,15 +8,15 @@ export async function getPackedTransactions(req: any, res: any) {
     limit = Number(limit)
 
     if (isNaN(page) || page < 0) {
-      throw new Error(`Invalid params 'page'`)
+      throw new PublicError(`Invalid params 'page'`)
     }
 
     if (isNaN(limit)) {
-      throw new Error(`Invalid params 'limit'`)
+      throw new PublicError(`Invalid params 'limit'`)
     }
 
     if (limit < 1 || limit > 100) {
-      throw new Error(`The range of limit is 1-100`)
+      throw new PublicError(`The range of limit is 1-100`)
     }
 
     const { count, list } = await getPackedTransactionsPagedData(page, limit)

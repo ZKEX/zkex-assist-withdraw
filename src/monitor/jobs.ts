@@ -4,7 +4,7 @@ import {
   selectCountEachChain,
   selectProcessedLogIdEachChain,
 } from '../db/query'
-import { fetchCountLogs, getEventProfile } from '../scanner'
+import { fetchCountLogs, getEventProfile } from '../modules/scanner/scanner'
 import { withdrawalEventTopic } from '../utils/withdrawal'
 import {
   metricLastExecutedLogId,

@@ -1,4 +1,4 @@
-import { populateTransaction } from '../src/parallel'
+import { populateTransaction } from '../src/modules/assistor/parallel'
 
 describe('populate transaction', () => {
   it('requests equal 1', async () => {

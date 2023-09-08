@@ -6,6 +6,17 @@ import { TRANSPORT_CONSOLE } from './../conf'
 const { combine, timestamp, colorize, simple, printf } = format
 const logsDir = path.resolve(__dirname, '../../logs')
 
+export class PublicError extends Error {
+  constructor(message: string) {
+    super(message)
+
+    Object.defineProperty(this, 'message', {
+      value: message,
+      enumerable: true,
+    })
+  }
+}
+
 export const logger = createLogger({
   level: 'debug',
   format: combine(

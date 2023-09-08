@@ -3,6 +3,7 @@ import { ZKLINK_STATIC_ENDPOINT } from '../conf'
 import { Address, ChainId } from '../types'
 import { Contract, Interface, JsonRpcProvider } from 'ethers'
 import Multicall from '../abi/Multicall.json'
+import { PublicError } from '../log'
 
 export const MULTICALL_INTERFACE = new Interface(Multicall.abi)
 
@@ -20,7 +21,7 @@ export async function fetchMulticallContracts() {
   const { multicall } = r
 
   if (!multicall) {
-    throw new Error('Can not fetch multicall contracts')
+    throw new PublicError('Can not fetch multicall contracts')
   }
 
   for (let chainId in multicall) {

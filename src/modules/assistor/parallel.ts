@@ -7,14 +7,18 @@ import {
   SUBMITTER_FEE_POLICY,
   SUBMITTER_PRIVATE_KEY,
   gasLimitForChains,
-} from './conf'
-import { pool } from './db'
-import { fetchFeeData } from './scanner'
-import { Address, ChainId } from './types'
-import { MULTICALL_INTERFACE } from './utils'
-import { WithdrawalRequestParams, decodeWithdrawData } from './utils/withdrawal'
-import { providerByChainId } from './utils/providers'
+} from '../../conf'
+import { pool } from '../../db'
+import { fetchFeeData } from '../scanner/scanner'
+import { Address, ChainId } from '../../types'
+import { MULTICALL_INTERFACE } from '../../utils'
+import {
+  WithdrawalRequestParams,
+  decodeWithdrawData,
+} from '../../utils/withdrawal'
+import { providerByChainId } from '../../utils/providers'
 import { Wallet } from 'ethers'
+import { PublicError } from '../../log'
 
 /**
  * Assembling TransactionRequest data for sending the transaction.
@@ -179,7 +183,7 @@ export class OrderedRequestStore implements IOrderedRequestStore {
         WHERE`,
     ]
     if (!chainId) {
-      throw new Error('Missing chainId in getLatestPackedTransaction')
+      throw new PublicError('Missing chainId in getLatestPackedTransaction')
     }
     sql.push(`chain_id=${chainId}`)
     if (nonce !== undefined) {

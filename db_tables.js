@@ -36,6 +36,21 @@ const createPackedTransactionsTableQuery = `
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 `
+const createWithdrawalHashTableQuery = `
+  CREATE TABLE IF NOT EXISTS withdrawal_hash
+  (
+    id SERIAL PRIMARY KEY,
+    executed_hash VARCHAR(66) NOT NULL,
+    to_address VARCHAR(42) NOT NULL,
+    chain_id INTEGER NOT NULL,
+    amount VARCHAR(66) NOT NULL,
+    token_id INTEGER NOT NULL,
+    log_index INTEGER NOT NULL,
+    withdrawal_hash VARCHAR(66) NOT NULL,
+    status SMALLINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`
 
 // Function to initialize the database and tables
 async function initializeDatabase() {
@@ -47,6 +62,7 @@ async function initializeDatabase() {
     await client.query(createRequestsTableQuery)
     await client.query(createPackedTransactionsTableQuery)
     await client.query(createProcessedLogsTableQuery)
+    await client.query(createWithdrawalHashTableQuery)
 
     console.log('Database and tables created successfully')
   } catch (error) {

@@ -1,4 +1,4 @@
-import { updateWithdrawalHash } from '../src/explorer'
+import { updateWithdrawalHash } from '../src/modules/explorer/explorer'
 import { logger } from '../src/log'
 
 /**

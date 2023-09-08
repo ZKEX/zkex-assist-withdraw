@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
-import { getRequestsPagedData } from '../db/requests'
-import { logger } from '../log'
+import { getRequestsPagedData } from '../../../db/requests'
+import { PublicError, logger } from '../../../log'
 
 export interface RequestsParams {
   page: number
@@ -18,20 +18,20 @@ export async function getRequests(req: Request, res: Response) {
     }
 
     if (isNaN(params.page) || params.page < 0) {
-      throw new Error(`Invalid params 'page'`)
+      throw new PublicError(`Invalid params 'page'`)
     }
     if (isNaN(params.limit)) {
-      throw new Error(`Invalid params 'limit'`)
+      throw new PublicError(`Invalid params 'limit'`)
     }
     if (params.limit < 1 || params.limit > 100) {
-      throw new Error(`The range of limit is 1-100`)
+      throw new PublicError(`The range of limit is 1-100`)
     }
     if (typeof hash !== 'undefined' && typeof hash !== 'string') {
-      throw new Error('Invalid tx hash type')
+      throw new PublicError('Invalid tx hash type')
     }
     if (typeof hash === 'string') {
       if (hash.length !== 0 && hash.length !== 66) {
-        throw new Error('Invalid tx hash length')
+        throw new PublicError('Invalid tx hash length')
       }
     }
 

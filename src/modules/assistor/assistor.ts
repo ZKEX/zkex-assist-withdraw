@@ -6,10 +6,10 @@ import {
   POLLING_LOGS_INTERVAL,
   START_LOG_ID,
   SUBMITTER_PRIVATE_KEY,
-} from './conf'
-import { selectMaxProcessedLogId } from './db/query'
-import { logger } from './log'
-import { metricStartupProcessCount, updateMetric } from './monitor/registry'
+} from '../../conf'
+import { selectMaxProcessedLogId } from '../../db/query'
+import { PublicError, logger } from '../../log'
+import { metricStartupProcessCount, updateMetric } from '../../monitor/registry'
 import { OrderedRequestStore, populateTransaction } from './parallel'
 import {
   EventLog,
@@ -18,19 +18,19 @@ import {
   getEventChains,
   getEventProfile,
   getMainContractByChainId,
-} from './scanner'
-import { sleep } from './utils/sleep'
+} from '../scanner/scanner'
+import { sleep } from '../../utils/sleep'
 import {
   WithdrawalRequestParams,
   compressAddress,
   decodeWithdrawalLog,
   encodeWithdrawData,
   groupingRequestParams,
-} from './utils/withdrawal'
-import { ChainId } from './types'
-import { getMulticallContracts } from './utils/multicall'
-import { providerByChainId } from './utils/providers'
-import { updateWithdrawalHash } from './explorer'
+} from '../../utils/withdrawal'
+import { ChainId } from '../../types'
+import { getMulticallContracts } from '../../utils/multicall'
+import { providerByChainId } from '../../utils/providers'
+import { updateWithdrawalHash } from '../explorer/explorer'
 
 export class AssistWithdraw {
   private signers: Record<number, ParallelSigner> = {}
@@ -48,7 +48,7 @@ export class AssistWithdraw {
       const chainProfile = chains.find((v) => Number(v.chainId) === chainId)
 
       if (!chainProfile) {
-        throw new Error(`Can't find chain's profile. ${chainId}`)
+        throw new PublicError(`Can't find chain's profile. ${chainId}`)
       }
 
       updateMetric(() => {
@@ -61,7 +61,7 @@ export class AssistWithdraw {
       const multicallContractAddress = multicallContracts[chainId]
 
       if (!multicallContractAddress) {
-        throw new Error(
+        throw new PublicError(
           `Can't find chain's multicall contract address. ${chainId}`
         )
       }
@@ -78,10 +78,10 @@ export class AssistWithdraw {
           checkConfirmation: async (txReceipt: TransactionReceipt) => {
             try {
               if (!txReceipt) {
-                throw new Error(`txReceipt is null, chain: ${chainId}`)
+                throw new PublicError(`txReceipt is null, chain: ${chainId}`)
               }
               if (!txReceipt?.hash) {
-                throw new Error(
+                throw new PublicError(
                   `cannot find hash in txReceipt, chain: ${chainId}`
                 )
               }
@@ -230,7 +230,7 @@ export class AssistWithdraw {
   async updateOffsetId(lastLogId: number) {
     lastLogId = Number(lastLogId)
     if (Number.isInteger(lastLogId) === false) {
-      throw new Error(
+      throw new PublicError(
         `update current log id fail, log id is not a integer, logId: ${lastLogId}`
       )
     }

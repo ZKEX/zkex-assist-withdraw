@@ -1,9 +1,16 @@
-import { ChainId } from './types/index'
+import { ChainId } from '../../types/index'
 import fetch from 'node-fetch'
-import './conf/index'
-import { EVENT_WATCHER_ENDPOINT, POLLING_LOGS_LIMIT } from './conf/index'
-import { Address, BlockNumber, EventName, HexString, Topic, Wei } from './types'
-import { withdrawalEventTopic } from './utils/withdrawal'
+import '../../conf/index'
+import { EVENT_WATCHER_ENDPOINT, POLLING_LOGS_LIMIT } from '../../conf/index'
+import {
+  Address,
+  BlockNumber,
+  EventName,
+  HexString,
+  Topic,
+  Wei,
+} from '../../types'
+import { withdrawalEventTopic } from '../../utils/withdrawal'
 
 async function scannerRpc(method: string, params: any[] = [], id: number = 1) {
   return fetch(EVENT_WATCHER_ENDPOINT, {

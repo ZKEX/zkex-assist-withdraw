@@ -1,9 +1,13 @@
 import fetch from 'node-fetch'
-import { selectPackedTransactionByHash, selectRequestsByIds } from './db/query'
-import { Address, ChainId } from './types'
-import { ZKLINK_SCAN_ENDPOINT } from './conf'
-import { logger } from './log'
-import { WithdrawalRequestParams } from './utils/withdrawal'
+import {
+  selectPackedTransactionByHash,
+  selectRequestsByIds,
+} from '../../db/query'
+import { Address, ChainId } from '../../types'
+import { ZKLINK_SCAN_ENDPOINT } from '../../conf'
+import { PublicError, logger } from '../../log'
+import { WithdrawalRequestParams } from '../../utils/withdrawal'
+import { insertWithdrawalHash } from '../../db/withdrawalHash'
 
 async function explorerRpc(method: string, params: any[] = [], id: number = 1) {
   return fetch(ZKLINK_SCAN_ENDPOINT, {
@@ -48,22 +52,24 @@ export async function updateWithdrawalHash(
       logIndex: v.logIndex,
       withdrawHash: packedHash,
     }))
-    logger.info(
-      `Update packed hash success, chain: ${chainId}, packed hash: ${packedHash}, requestIds: ${requestIds}`
-    )
-    params.forEach((v) => {
-      logger.info(
-        `Chain: ${v.chainId}, Executed Hash: ${v.executedHash}, To Address: ${v.toAddress}, Token: ${v.tokenId}, Amount: ${v.amount}, Log Index: ${v.logIndex}`
-      )
-    })
     const r = await explorerRpc('update_withdraw_hash', [params]).catch((e) => {
       throw e
     })
 
-    console.log(r)
-
     if (r.error) {
-      throw new Error(
+      params.forEach((v) => {
+        insertWithdrawalHash(
+          v.executedHash,
+          v.toAddress,
+          Number(v.chainId),
+          v.amount,
+          v.tokenId,
+          v.logIndex,
+          v.withdrawHash,
+          2
+        )
+      })
+      throw new PublicError(
         `Update withdrawal hash fail, chain: ${chainId}, packed hash: ${packedHash}, code: ${r.error.code}, message: ${r.error.message}`
       )
     }
@@ -73,8 +79,15 @@ export async function updateWithdrawalHash(
         `Update packed hash success, chain: ${chainId}, packed hash: ${packedHash}, requestIds: ${requestIds}`
       )
       params.forEach((v) => {
-        logger.info(
-          `Chain: ${v.chainId}, Executed Hash: ${v.executedHash}, To Address: ${v.toAddress}, Token: ${v.tokenId}, Amount: ${v.amount}, Log Index: ${v.logIndex}`
+        insertWithdrawalHash(
+          v.executedHash,
+          v.toAddress,
+          Number(v.chainId),
+          v.amount,
+          v.tokenId,
+          v.logIndex,
+          v.withdrawHash,
+          1
         )
       })
     }
@@ -91,7 +104,7 @@ export async function queryRequestIdsByHash(
   const { rows } = await selectPackedTransactionByHash(chainId, packedHash)
 
   if (!rows?.length) {
-    throw new Error(
+    throw new PublicError(
       `cannot find packed hash in database, chain ${chainId}, hash ${packedHash}`
     )
   }
@@ -99,7 +112,9 @@ export async function queryRequestIdsByHash(
   const { requestIds } = rows[0]
 
   if (!requestIds) {
-    throw new Error(`requestIds is null, chain ${chainId}, hash ${packedHash}`)
+    throw new PublicError(
+      `requestIds is null, chain ${chainId}, hash ${packedHash}`
+    )
   }
 
   return requestIds
