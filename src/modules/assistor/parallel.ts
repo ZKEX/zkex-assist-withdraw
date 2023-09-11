@@ -140,7 +140,7 @@ export class OrderedRequestStore implements IOrderedRequestStore {
   ): Promise<Request[]> {
     const r = await pool.query(`
         SELECT * FROM requests
-        WHERE chain_id = ${chainId}  and  id >=  ${minimalId} limit ${limit}
+        WHERE chain_id = ${chainId}  AND  id >=  ${minimalId} ORDER BY id ASC LIMIT ${limit}
       `)
     return r.rows.map((v) => {
       return buildRequest(v)
