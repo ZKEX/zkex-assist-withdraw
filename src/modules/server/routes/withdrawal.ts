@@ -77,7 +77,7 @@ async function handleWithdraw(body: RequestsBody): Promise<string | false> {
   }
   const transaction = await wallet.sendTransaction(tx)
   const timer = setTimeout(() => {
-    throw new Error(`Timeout ${chainId}`)
+    throw new Error(`Timeout post withdrawal ${chainId}`)
   }, 120000)
   const wait = await transaction.wait()
 
@@ -108,10 +108,12 @@ export async function postWithdrawalTxs(req: Request, res: Response) {
     }
     const chain = supportChains.find((v) => v.layerOneChainId === chainId)
     if (!chain) {
-      throw new Error(`Invalid chain id ${chainId}`)
+      throw new PublicError(`Invalid chain id ${chainId}`)
     }
 
-    const r = await handleWithdraw(req.body)
+    const r = await handleWithdraw(req.body).catch((e) => {
+      throw new PublicError(e?.message)
+    })
     res.json({
       code: 0,
       data: r,
