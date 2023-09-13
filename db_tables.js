@@ -31,6 +31,8 @@ const createPackedTransactionsTableQuery = `
     max_fee_per_gas VARCHAR(20) DEFAULT '',
     max_priority_fee_per_gas VARCHAR(20) DEFAULT '',
     gas_price VARCHAR(20) DEFAULT '',
+    effective_gas_price VARCHAR(20) DEFAULT '',
+    gas_used VARCHAR(20) DEFAULT '',
     request_ids TEXT NOT NULL,
     confirmation INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

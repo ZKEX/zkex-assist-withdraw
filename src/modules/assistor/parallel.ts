@@ -18,7 +18,7 @@ import {
 } from '../../utils/withdrawal'
 import { providerByChainId } from '../../utils/providers'
 import { Wallet } from 'ethers'
-import { PublicError } from '../../log'
+import { PublicError, logger } from '../../log'
 import { estimateGasLimit } from './gasLimit'
 
 /**
@@ -285,6 +285,29 @@ export class OrderedRequestStore implements IOrderedRequestStore {
         chain_id = ${chainID} and  p.confirmation = 0;
     `)
     return r.rows.map((v) => buildPackedTransaction(v))
+  }
+
+  async setPackedTransactionGasPriceAndGasUsed(
+    id: number,
+    effectiveGasPrice: string,
+    gasUsed: string
+  ) {
+    try {
+      if (!id) {
+        throw new Error(
+          `setPackedTransactionGasPriceAndGasUsed id is undefined, id: ${id}`
+        )
+      }
+      await pool.query(`
+        UPDATE packed_transactions
+        SET 
+            effective_gas_price = '${BigInt(effectiveGasPrice).toString()}',
+            gas_used = '${BigInt(gasUsed).toString()}'
+        WHERE id = ${id};
+    `)
+    } catch (e) {
+      logger.error(e)
+    }
   }
 }
 
