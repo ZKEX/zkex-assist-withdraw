@@ -45,3 +45,5 @@ export const EVENT_NAME = 'WithdrawalPending'
 export const TRANSPORT_CONSOLE = true
 
 export const gasLimitForChains: Record<ChainId, bigint> = {}
+
+export const ZKLINK_STARKNET_CHAINID = 16

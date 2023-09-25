@@ -3,6 +3,7 @@ import { ZKLINK_RPC_ENDPOINT } from '../conf'
 import { cache } from './cache'
 import { Address, ChainId, L2ChainId } from '../types'
 import { PublicError, logger } from '../log'
+import { ZKLINK_STARKNET_CHAINID } from '../conf'
 
 async function zklinkRpc(method: string, params: any[], id: number = 0) {
   return fetch(`${ZKLINK_RPC_ENDPOINT}`, {
@@ -50,7 +51,13 @@ export async function getSupportChains(): Promise<SupportChains> {
   let data = cache.get(method) as SupportChains
   if (data === undefined) {
     data = await zklinkRpc(method, []).then((r) => r.result)
-    cache.set(method, data)
+    const chains = data.map((v) => {
+      if (Number(v.chainId) != Number(ZKLINK_STARKNET_CHAINID)) {
+        v.layerOneChainId = Number(v.layerOneChainId)
+      }
+      return v
+    })
+    cache.set(method, chains)
   }
   return data
 }
