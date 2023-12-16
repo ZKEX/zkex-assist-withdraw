@@ -1,24 +1,17 @@
+import { Wallet, parseUnits } from 'ethers'
 import {
   IOrderedRequestStore,
   PackedTransaction,
   Request,
 } from 'parallel-signer'
-import {
-  SUBMITTER_FEE_POLICY,
-  SUBMITTER_PRIVATE_KEY,
-  gasLimitForChains,
-} from '../../conf'
+import { SUBMITTER_FEE_POLICY, SUBMITTER_PRIVATE_KEY } from '../../conf'
 import { pool } from '../../db'
-import { fetchFeeData } from '../scanner/scanner'
+import { PublicError, logger } from '../../log'
 import { Address, ChainId } from '../../types'
 import { MULTICALL_INTERFACE } from '../../utils'
-import {
-  WithdrawalRequestParams,
-  decodeWithdrawData,
-} from '../../utils/withdrawal'
 import { providerByChainId } from '../../utils/providers'
-import { Wallet } from 'ethers'
-import { PublicError, logger } from '../../log'
+import { WithdrawalRequestParams } from '../../utils/withdrawal'
+import { fetchFeeData } from '../scanner/scanner'
 import { estimateGasLimit } from './gasLimit'
 
 /**
@@ -90,6 +83,11 @@ export function populateTransaction(
     if (maxFeePerGas && maxFeePerGas != 0n) {
       fee.maxFeePerGas = BigInt(maxFeePerGas!)
       fee.maxPriorityFeePerGas = BigInt(maxPriorityFeePerGas!)
+
+      if (chainId === 59144) {
+        fee.maxFeePerGas = parseUnits('6', 'gwei')
+        fee.maxPriorityFeePerGas = parseUnits('4.5', 'gwei')
+      }
     } else if (gasPrice && gasPrice != 0n) {
       fee.gasPrice = BigInt(gasPrice)
     }
