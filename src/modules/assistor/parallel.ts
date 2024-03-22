@@ -84,10 +84,10 @@ export function populateTransaction(
       fee.maxFeePerGas = BigInt(maxFeePerGas!)
       fee.maxPriorityFeePerGas = BigInt(maxPriorityFeePerGas!)
 
-      if (chainId === 59144) {
-        fee.maxFeePerGas = parseUnits('6', 'gwei')
-        fee.maxPriorityFeePerGas = parseUnits('4.5', 'gwei')
-      }
+      // if (chainId === 59144) {
+      //   fee.maxFeePerGas = parseUnits('6', 'gwei')
+      //   fee.maxPriorityFeePerGas = parseUnits('4.5', 'gwei')
+      // }
     } else if (gasPrice && gasPrice != 0n) {
       fee.gasPrice = BigInt(gasPrice)
     }
